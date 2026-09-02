@@ -32,7 +32,8 @@ export interface PutEventBridgeEventOptions<TEvent extends Event = Event> {
 export function putEventBridgeEvent<TEvent extends Event = Event>(
   options: PutEventBridgeEventOptions<TEvent> = {},
 ): Listener<TEvent> {
-  const client = options.client ?? new EventBridgeClient(options.clientConfig ?? {});
+  const client = options.client ??
+    new EventBridgeClient(options.clientConfig ?? {});
 
   return {
     name: "aws-eventbridge-put-event",
@@ -53,15 +54,17 @@ export function putEventBridgeEvent<TEvent extends Event = Event>(
         ? undefined
         : await resolve(options.eventBusName, event, context);
 
-      const response = await client.send(new PutEventsCommand({
-        Entries: [{
-          ...nativeEntry,
-          EventBusName: eventBusName,
-          Source: source,
-          DetailType: detailType,
-          Detail: stringifyPayload(detail),
-        }],
-      }));
+      const response = await client.send(
+        new PutEventsCommand({
+          Entries: [{
+            ...nativeEntry,
+            EventBusName: eventBusName,
+            Source: source,
+            DetailType: detailType,
+            Detail: stringifyPayload(detail),
+          }],
+        }),
+      );
 
       const entry = response.Entries?.[0];
       const success = (response.FailedEntryCount ?? 0) === 0 &&
