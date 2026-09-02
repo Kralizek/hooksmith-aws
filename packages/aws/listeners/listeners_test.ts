@@ -42,7 +42,10 @@ Deno.test("sendSqsMessage sends event data by default", async () => {
       send(value) {
         command = value;
         return Promise.resolve(
-          { MessageId: "message-1" } satisfies SendMessageCommandOutput,
+          {
+            $metadata: {},
+            MessageId: "message-1",
+          } satisfies SendMessageCommandOutput,
         );
       },
     },
@@ -63,7 +66,10 @@ Deno.test("publishSnsMessage sends event data by default", async () => {
       send(value) {
         command = value;
         return Promise.resolve(
-          { MessageId: "message-2" } satisfies PublishCommandOutput,
+          {
+            $metadata: {},
+            MessageId: "message-2",
+          } satisfies PublishCommandOutput,
         );
       },
     },
@@ -83,6 +89,7 @@ Deno.test("putEventBridgeEvent derives source and detail type", async () => {
         command = value;
         return Promise.resolve(
           {
+            $metadata: {},
             FailedEntryCount: 0,
             Entries: [{ EventId: "event-1" }],
           } satisfies PutEventsCommandOutput,
@@ -106,6 +113,7 @@ Deno.test("putEventBridgeEvent reports partial API failure", async () => {
       send(_value: PutEventsCommand) {
         return Promise.resolve(
           {
+            $metadata: {},
             FailedEntryCount: 1,
             Entries: [{ ErrorCode: "InternalFailure", ErrorMessage: "boom" }],
           } satisfies PutEventsCommandOutput,
@@ -127,7 +135,10 @@ Deno.test("invokeLambdaFunction serializes event data", async () => {
       send(value) {
         command = value;
         return Promise.resolve(
-          { StatusCode: 200 } satisfies InvokeCommandOutput,
+          {
+            $metadata: {},
+            StatusCode: 200,
+          } satisfies InvokeCommandOutput,
         );
       },
     },
@@ -137,7 +148,7 @@ Deno.test("invokeLambdaFunction serializes event data", async () => {
 
   assertEquals(command?.input.FunctionName, "process-order");
   assertEquals(
-    new TextDecoder().decode(command?.input.Payload),
+    new TextDecoder().decode(command?.input.Payload as Uint8Array),
     '{"orderId":"42"}',
   );
   assertEquals(result.success, true);
