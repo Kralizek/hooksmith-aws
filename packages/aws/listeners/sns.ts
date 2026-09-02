@@ -40,11 +40,13 @@ export function publishSnsMessage<TEvent extends Event = Event>(
         ? event.data
         : await resolve(options.message, event, context);
 
-      const response = await client.send(new PublishCommand({
-        ...nativeInput,
-        TopicArn: topicArn,
-        Message: stringifyPayload(message),
-      }));
+      const response = await client.send(
+        new PublishCommand({
+          ...nativeInput,
+          TopicArn: topicArn,
+          Message: stringifyPayload(message),
+        }),
+      );
 
       return {
         success: true,
