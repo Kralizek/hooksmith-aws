@@ -15,7 +15,9 @@ export function stringifyPayload(value: unknown): string {
 
   const serialized = JSON.stringify(value);
   if (serialized === undefined) {
-    throw new TypeError("AWS payload must be a string or JSON-serializable value.");
+    throw new TypeError(
+      "AWS payload must be a string or JSON-serializable value.",
+    );
   }
 
   return serialized;

@@ -26,7 +26,10 @@ Deno.test("fromSqs falls back when SentTimestamp is invalid", () => {
     attributes: { SentTimestamp: "not-a-number" },
   });
 
-  assertEquals(Temporal.Instant.from(event.timestamp).toString(), event.timestamp);
+  assertEquals(
+    Temporal.Instant.from(event.timestamp).toString(),
+    event.timestamp,
+  );
 });
 
 Deno.test("fromSqsRaw expects the body to be a Hooksmith event", () => {

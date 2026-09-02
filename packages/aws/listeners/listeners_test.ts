@@ -188,10 +188,12 @@ Deno.test("invokeLambdaFunction rejects non-serializable payloads", async () => 
     functionName: "process-order",
     client: {
       send(_value: InvokeCommand) {
-        return Promise.resolve({
-          $metadata: {},
-          StatusCode: 200,
-        } satisfies InvokeCommandOutput);
+        return Promise.resolve(
+          {
+            $metadata: {},
+            StatusCode: 200,
+          } satisfies InvokeCommandOutput,
+        );
       },
     },
   });
