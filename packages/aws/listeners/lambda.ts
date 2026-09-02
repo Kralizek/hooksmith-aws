@@ -40,11 +40,13 @@ export function invokeLambdaFunction<TEvent extends Event = Event>(
         ? event.data
         : await resolve(options.payload, event, context);
 
-      const response = await client.send(new InvokeCommand({
-        ...nativeInput,
-        FunctionName: functionName,
-        Payload: encoder.encode(JSON.stringify(payload)),
-      }));
+      const response = await client.send(
+        new InvokeCommand({
+          ...nativeInput,
+          FunctionName: functionName,
+          Payload: encoder.encode(JSON.stringify(payload)),
+        }),
+      );
       const statusCode = response.StatusCode;
       const success = response.FunctionError === undefined &&
         statusCode !== undefined && statusCode >= 200 && statusCode < 300;
