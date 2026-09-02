@@ -4,13 +4,17 @@
     "./packages/aws-lambda"
   ],
   "imports": {
+    "@aws-sdk/client-eventbridge": "npm:@aws-sdk/client-eventbridge@^3.0.0",
+    "@aws-sdk/client-lambda": "npm:@aws-sdk/client-lambda@^3.0.0",
+    "@aws-sdk/client-sns": "npm:@aws-sdk/client-sns@^3.0.0",
+    "@aws-sdk/client-sqs": "npm:@aws-sdk/client-sqs@^3.0.0",
     "@hooksmith/core": "jsr:@hooksmith/core@^0.7.0",
     "@hooksmith/runtime": "jsr:@hooksmith/runtime@^0.7.0",
     "@std/assert": "jsr:@std/assert@^1"
   },
   "minimumDependencyAge": 0,
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno test -A && deno check packages/*/mod.ts",
+    "check": "deno fmt --check && deno lint && deno test -A && deno check packages/*/mod.ts examples/*/*.ts",
     "test": "deno test -A"
   },
   "lock": false
