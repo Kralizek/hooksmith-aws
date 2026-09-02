@@ -40,11 +40,13 @@ export function sendSqsMessage<TEvent extends Event = Event>(
         ? event.data
         : await resolve(options.body, event, context);
 
-      const response = await client.send(new SendMessageCommand({
-        ...nativeInput,
-        QueueUrl: queueUrl,
-        MessageBody: stringifyPayload(body),
-      }));
+      const response = await client.send(
+        new SendMessageCommand({
+          ...nativeInput,
+          QueueUrl: queueUrl,
+          MessageBody: stringifyPayload(body),
+        }),
+      );
 
       return {
         success: true,
