@@ -19,10 +19,7 @@ export interface PutEventBridgeEventOptions<TEvent extends Event = Event> {
   detailType?: ValueOrFactory<string, TEvent>;
   detail?: ValueOrFactory<unknown, TEvent>;
   entry?: ValueOrFactory<
-    Omit<
-      PutEventsRequestEntry,
-      "EventBusName" | "Source" | "DetailType" | "Detail"
-    >,
+    Omit<PutEventsRequestEntry, "Source" | "DetailType" | "Detail">,
     TEvent
   >;
   client?: EventBridgeClientLike;
@@ -51,7 +48,7 @@ export function putEventBridgeEvent<TEvent extends Event = Event>(
         ? event.data
         : await resolve(options.detail, event, context);
       const eventBusName = options.eventBusName === undefined
-        ? undefined
+        ? nativeEntry.EventBusName
         : await resolve(options.eventBusName, event, context);
 
       const response = await client.send(

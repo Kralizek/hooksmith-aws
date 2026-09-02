@@ -19,6 +19,16 @@ Deno.test("fromSqs maps envelope metadata and body data", () => {
   assertEquals(event.metadata?.awsRegion, "eu-north-1");
 });
 
+Deno.test("fromSqs falls back when SentTimestamp is invalid", () => {
+  const event = fromSqs({
+    messageId: "message-invalid-timestamp",
+    body: "{}",
+    attributes: { SentTimestamp: "not-a-number" },
+  });
+
+  assertEquals(Temporal.Instant.from(event.timestamp).toString(), event.timestamp);
+});
+
 Deno.test("fromSqsRaw expects the body to be a Hooksmith event", () => {
   const event = fromSqsRaw({
     body: JSON.stringify({

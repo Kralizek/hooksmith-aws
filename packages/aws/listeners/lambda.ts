@@ -6,6 +6,7 @@ import {
   LambdaClient,
   type LambdaClientConfig,
 } from "@aws-sdk/client-lambda";
+import { stringifyPayload } from "../shared/payload.ts";
 import { resolve, type ValueOrFactory } from "../shared/value.ts";
 
 export interface LambdaClientLike {
@@ -44,7 +45,7 @@ export function invokeLambdaFunction<TEvent extends Event = Event>(
         new InvokeCommand({
           ...nativeInput,
           FunctionName: functionName,
-          Payload: encoder.encode(JSON.stringify(payload)),
+          Payload: encoder.encode(stringifyPayload(payload)),
         }),
       );
       const statusCode = response.StatusCode;

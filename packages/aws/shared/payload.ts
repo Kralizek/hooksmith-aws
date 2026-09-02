@@ -11,7 +11,14 @@ export function parsePayload(value: unknown): unknown {
 }
 
 export function stringifyPayload(value: unknown): string {
-  return typeof value === "string" ? value : JSON.stringify(value);
+  if (typeof value === "string") return value;
+
+  const serialized = JSON.stringify(value);
+  if (serialized === undefined) {
+    throw new TypeError("AWS payload must be a string or JSON-serializable value.");
+  }
+
+  return serialized;
 }
 
 export function parseEventDocument<TData = unknown>(

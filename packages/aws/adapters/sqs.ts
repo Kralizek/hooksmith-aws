@@ -14,10 +14,7 @@ export interface SqsMessage {
 export function fromSqs<TData = unknown>(
   message: SqsMessage,
 ): EventDocument<TData> {
-  const sentTimestamp = message.attributes?.SentTimestamp;
-  const timestamp = sentTimestamp === undefined
-    ? Temporal.Now.instant().toString()
-    : Temporal.Instant.fromEpochMilliseconds(Number(sentTimestamp)).toString();
+  const timestamp = resolveTimestamp(message.attributes?.SentTimestamp);
 
   return {
     type: "aws.sqs.message",
@@ -44,6 +41,21 @@ export function fromSqsRaw<TData = unknown>(
   message: Pick<SqsMessage, "body">,
 ): EventDocument<TData> {
   return parseEventDocument<TData>(message.body);
+}
+
+function resolveTimestamp(sentTimestamp: string | undefined): string {
+  if (sentTimestamp !== undefined) {
+    const milliseconds = Number(sentTimestamp);
+    if (Number.isFinite(milliseconds)) {
+      try {
+        return Temporal.Instant.fromEpochMilliseconds(milliseconds).toString();
+      } catch {
+        // Fall back to the receive time for invalid or out-of-range timestamps.
+      }
+    }
+  }
+
+  return Temporal.Now.instant().toString();
 }
 
 function compact(

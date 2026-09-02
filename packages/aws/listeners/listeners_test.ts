@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import type { Context, Event } from "@hooksmith/core";
 import type {
   PutEventsCommand,
@@ -107,6 +107,29 @@ Deno.test("putEventBridgeEvent derives source and detail type", async () => {
   assertEquals(result.success, true);
 });
 
+Deno.test("putEventBridgeEvent preserves native EventBusName", async () => {
+  let command: PutEventsCommand | undefined;
+  const listener = putEventBridgeEvent({
+    entry: { EventBusName: "native-bus" },
+    client: {
+      send(value) {
+        command = value;
+        return Promise.resolve(
+          {
+            $metadata: {},
+            FailedEntryCount: 0,
+            Entries: [{ EventId: "event-2" }],
+          } satisfies PutEventsCommandOutput,
+        );
+      },
+    },
+  });
+
+  await listener.run(event, context);
+
+  assertEquals(command?.input.Entries?.[0]?.EventBusName, "native-bus");
+});
+
 Deno.test("putEventBridgeEvent reports partial API failure", async () => {
   const listener = putEventBridgeEvent({
     client: {
@@ -152,4 +175,30 @@ Deno.test("invokeLambdaFunction serializes event data", async () => {
     '{"orderId":"42"}',
   );
   assertEquals(result.success, true);
+});
+
+Deno.test("invokeLambdaFunction rejects non-serializable payloads", async () => {
+  const undefinedEvent: Event<undefined> = {
+    type: "order.created",
+    timestamp: Temporal.Instant.from("2026-09-02T20:00:00Z"),
+    source: { kind: "orders" },
+    data: undefined,
+  };
+  const listener = invokeLambdaFunction<Event<undefined>>({
+    functionName: "process-order",
+    client: {
+      send(_value: InvokeCommand) {
+        return Promise.resolve({
+          $metadata: {},
+          StatusCode: 200,
+        } satisfies InvokeCommandOutput);
+      },
+    },
+  });
+
+  await assertRejects(
+    () => listener.run(undefinedEvent, context),
+    TypeError,
+    "AWS payload must be a string or JSON-serializable value.",
+  );
 });
