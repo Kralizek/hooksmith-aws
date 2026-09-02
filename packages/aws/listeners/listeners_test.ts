@@ -199,7 +199,7 @@ Deno.test("invokeLambdaFunction rejects non-serializable payloads", async () => 
   });
 
   await assertRejects(
-    () => listener.run(undefinedEvent, context),
+    async () => await listener.run(undefinedEvent, context),
     TypeError,
     "AWS payload must be a string or JSON-serializable value.",
   );
