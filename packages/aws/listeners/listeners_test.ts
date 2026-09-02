@@ -1,9 +1,18 @@
 import { assertEquals } from "@std/assert";
 import type { Context, Event } from "@hooksmith/core";
-import type { PutEventsCommand, PutEventsCommandOutput } from "@aws-sdk/client-eventbridge";
-import type { InvokeCommand, InvokeCommandOutput } from "@aws-sdk/client-lambda";
+import type {
+  PutEventsCommand,
+  PutEventsCommandOutput,
+} from "@aws-sdk/client-eventbridge";
+import type {
+  InvokeCommand,
+  InvokeCommandOutput,
+} from "@aws-sdk/client-lambda";
 import type { PublishCommand, PublishCommandOutput } from "@aws-sdk/client-sns";
-import type { SendMessageCommand, SendMessageCommandOutput } from "@aws-sdk/client-sqs";
+import type {
+  SendMessageCommand,
+  SendMessageCommandOutput,
+} from "@aws-sdk/client-sqs";
 import { putEventBridgeEvent } from "./eventbridge.ts";
 import { invokeLambdaFunction } from "./lambda.ts";
 import { publishSnsMessage } from "./sns.ts";
@@ -32,7 +41,9 @@ Deno.test("sendSqsMessage sends event data by default", async () => {
     client: {
       send(value) {
         command = value;
-        return Promise.resolve({ MessageId: "message-1" } satisfies SendMessageCommandOutput);
+        return Promise.resolve(
+          { MessageId: "message-1" } satisfies SendMessageCommandOutput,
+        );
       },
     },
   });
@@ -51,7 +62,9 @@ Deno.test("publishSnsMessage sends event data by default", async () => {
     client: {
       send(value) {
         command = value;
-        return Promise.resolve({ MessageId: "message-2" } satisfies PublishCommandOutput);
+        return Promise.resolve(
+          { MessageId: "message-2" } satisfies PublishCommandOutput,
+        );
       },
     },
   });
@@ -68,10 +81,12 @@ Deno.test("putEventBridgeEvent derives source and detail type", async () => {
     client: {
       send(value) {
         command = value;
-        return Promise.resolve({
-          FailedEntryCount: 0,
-          Entries: [{ EventId: "event-1" }],
-        } satisfies PutEventsCommandOutput);
+        return Promise.resolve(
+          {
+            FailedEntryCount: 0,
+            Entries: [{ EventId: "event-1" }],
+          } satisfies PutEventsCommandOutput,
+        );
       },
     },
   });
@@ -89,10 +104,12 @@ Deno.test("putEventBridgeEvent reports partial API failure", async () => {
   const listener = putEventBridgeEvent({
     client: {
       send(_value: PutEventsCommand) {
-        return Promise.resolve({
-          FailedEntryCount: 1,
-          Entries: [{ ErrorCode: "InternalFailure", ErrorMessage: "boom" }],
-        } satisfies PutEventsCommandOutput);
+        return Promise.resolve(
+          {
+            FailedEntryCount: 1,
+            Entries: [{ ErrorCode: "InternalFailure", ErrorMessage: "boom" }],
+          } satisfies PutEventsCommandOutput,
+        );
       },
     },
   });
@@ -109,7 +126,9 @@ Deno.test("invokeLambdaFunction serializes event data", async () => {
     client: {
       send(value) {
         command = value;
-        return Promise.resolve({ StatusCode: 200 } satisfies InvokeCommandOutput);
+        return Promise.resolve(
+          { StatusCode: 200 } satisfies InvokeCommandOutput,
+        );
       },
     },
   });
@@ -117,6 +136,9 @@ Deno.test("invokeLambdaFunction serializes event data", async () => {
   const result = await listener.run(event, context);
 
   assertEquals(command?.input.FunctionName, "process-order");
-  assertEquals(new TextDecoder().decode(command?.input.Payload), '{"orderId":"42"}');
+  assertEquals(
+    new TextDecoder().decode(command?.input.Payload),
+    '{"orderId":"42"}',
+  );
   assertEquals(result.success, true);
 });
