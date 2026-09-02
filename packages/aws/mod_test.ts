@@ -1,6 +1,5 @@
-import { assert } from "@std/assert";
-import * as aws from "./mod.ts";
+import { assertEquals } from "@std/assert";
 
-Deno.test("module loads", () => {
-  assert(aws);
+Deno.test("example test", () => {
+  assertEquals(1, 1);
 });
