@@ -1,5 +1,4 @@
-import type { EventDocument } from "@hooksmith/core";
-import type { Processor } from "./handler.ts";
+import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
 export interface LambdaRecord {
   messageId: string;
@@ -10,10 +9,6 @@ export interface LambdaRecord {
   eventSourceARN?: string;
   awsRegion?: string;
 }
-
-export type RecordReader<TData = unknown> = (
-  record: LambdaRecord,
-) => EventDocument<TData> | Promise<EventDocument<TData>>;
 
 export interface LambdaEvent {
   Records: LambdaRecord[];
@@ -28,9 +23,9 @@ export interface BatchResponse {
 }
 
 export function createHandler<TData = unknown>(
-  read: RecordReader<TData>,
-  processor: Processor<TData>,
-): (event: LambdaEvent) => Promise<BatchResponse> {
+  read: EventReader<LambdaRecord, TData>,
+  processor: EventProcessor<TData>,
+): LambdaHandler<LambdaEvent, BatchResponse> {
   return async (event) => {
     const batchItemFailures: BatchItemFailure[] = [];
 

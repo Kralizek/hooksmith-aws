@@ -1,5 +1,5 @@
-import type { EventDocument } from "@hooksmith/core";
 import type { RunReport } from "@hooksmith/runtime";
+import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
 export interface LambdaEvent<TDetail = unknown> {
   version: string;
@@ -13,20 +13,15 @@ export interface LambdaEvent<TDetail = unknown> {
   detail: TDetail;
 }
 
-export type EventReader<TData = unknown> = (
-  event: LambdaEvent<TData>,
-) => EventDocument<TData> | Promise<EventDocument<TData>>;
-
-export type EventProcessor<TData = unknown> = (
-  event: EventDocument<TData>,
-) => Promise<RunReport>;
-
-export function createHandler<TData = unknown>(
-  read: EventReader<TData>,
-  process: EventProcessor<TData>,
-): (event: LambdaEvent<TData>) => Promise<RunReport> {
+export function createHandler<
+  TDetail = unknown,
+  TData = TDetail,
+>(
+  read: EventReader<LambdaEvent<TDetail>, TData>,
+  processor: EventProcessor<TData>,
+): LambdaHandler<LambdaEvent<TDetail>, RunReport> {
   return async (event) => {
-    const report = await process(await read(event));
+    const report = await processor(await read(event));
     if (!report.success) {
       throw new Error("Hooksmith failed to process the EventBridge event.");
     }

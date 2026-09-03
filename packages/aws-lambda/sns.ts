@@ -1,5 +1,4 @@
-import type { EventDocument } from "@hooksmith/core";
-import type { Processor } from "./handler.ts";
+import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
 export interface Notification {
   Type: string;
@@ -19,18 +18,14 @@ export interface LambdaRecord {
   Sns: Notification;
 }
 
-export type RecordReader<TData = unknown> = (
-  notification: Notification,
-) => EventDocument<TData> | Promise<EventDocument<TData>>;
-
 export interface LambdaEvent {
   Records: LambdaRecord[];
 }
 
 export function createHandler<TData = unknown>(
-  read: RecordReader<TData>,
-  processor: Processor<TData>,
-): (event: LambdaEvent) => Promise<void> {
+  read: EventReader<Notification, TData>,
+  processor: EventProcessor<TData>,
+): LambdaHandler<LambdaEvent, void> {
   return async (event) => {
     for (const record of event.Records) {
       const document = await read(record.Sns);

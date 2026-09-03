@@ -5,3 +5,5 @@
  */
 
 export * from "./handler.ts";
+export * from "./processor.ts";
+export * from "./types.ts";
