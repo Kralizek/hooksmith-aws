@@ -25,7 +25,9 @@ promoted to the event itself.
 For SQS and SNS, sender-defined message attributes are promoted to top-level
 Hooksmith `event.metadata` so application metadata remains easy to consume.
 AWS-owned envelope and transport information is kept under `metadata.sqs` or
-`metadata.sns`.
+`metadata.sns`. Those service keys are reserved; an SQS message attribute named
+`sqs` or an SNS message attribute named `sns` is rejected rather than silently
+overwriting transport metadata.
 
 ```ts
 import { fromEventBridge } from "@hooksmith/aws/eventbridge";

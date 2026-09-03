@@ -1,4 +1,8 @@
-import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
+import type {
+  EventProcessor,
+  EventReader,
+  LambdaHandler,
+} from "./types.ts";
 
 export interface Notification {
   Type: string;
@@ -31,7 +35,12 @@ export function createHandler<TData = unknown>(
       const document = await read(record.Sns);
       const report = await processor(document);
       if (!report.success) {
-        throw new Error("Hooksmith failed to process an SNS notification.");
+        throw new Error("Hooksmith failed to process an SNS notification.", {
+          cause: {
+            messageId: record.Sns.MessageId,
+            topicArn: record.Sns.TopicArn,
+          },
+        });
       }
     }
   };

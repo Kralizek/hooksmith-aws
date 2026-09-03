@@ -58,7 +58,7 @@ Deno.test("SNS handler rejects unsuccessful Hooksmith processing", async () => {
     () => Promise.resolve(report(false)),
   );
 
-  await assertRejects(
+  const error = await assertRejects(
     () =>
       handler({
         Records: [{ Sns: notification("failed", "message-1") }],
@@ -66,6 +66,11 @@ Deno.test("SNS handler rejects unsuccessful Hooksmith processing", async () => {
     Error,
     "Hooksmith failed to process an SNS notification.",
   );
+
+  assertEquals(error.cause, {
+    messageId: "message-1",
+    topicArn: "arn:aws:sns:eu-north-1:123:orders",
+  });
 });
 
 Deno.test("EventBridge handler processes one event", async () => {

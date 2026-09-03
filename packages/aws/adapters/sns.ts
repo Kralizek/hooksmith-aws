@@ -18,6 +18,8 @@ export interface SnsNotification {
 export function fromSns<TData = unknown>(
   notification: SnsNotification,
 ): EventDocument<TData> {
+  assertReservedMetadataKeyAvailable(notification.MessageAttributes, "sns");
+
   const sns = compact({
     notificationType: notification.Type,
     subject: notification.Subject,
@@ -70,6 +72,17 @@ function readMessageAttribute(attribute: unknown): unknown {
 
   const value = attribute as Record<string, unknown>;
   return value.Value ?? attribute;
+}
+
+function assertReservedMetadataKeyAvailable(
+  attributes: Record<string, unknown> | undefined,
+  key: string,
+): void {
+  if (attributes !== undefined && key in attributes) {
+    throw new Error(
+      `SNS message attribute "${key}" conflicts with reserved Hooksmith metadata key "${key}".`,
+    );
+  }
 }
 
 function compact(

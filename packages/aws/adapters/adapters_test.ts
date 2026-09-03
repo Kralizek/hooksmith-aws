@@ -31,6 +31,19 @@ Deno.test("fromSqs maps envelope metadata and body data", () => {
   });
 });
 
+Deno.test("fromSqs rejects reserved metadata collisions", () => {
+  assertThrows(
+    () =>
+      fromSqs({
+        messageId: "message-1",
+        body: "{}",
+        messageAttributes: { sqs: { stringValue: "custom" } },
+      }),
+    Error,
+    'SQS message attribute "sqs" conflicts with reserved Hooksmith metadata key "sqs".',
+  );
+});
+
 Deno.test("fromSqs falls back when SentTimestamp is invalid", () => {
   const event = fromSqs({
     messageId: "message-invalid-timestamp",
@@ -83,6 +96,22 @@ Deno.test("fromSns promotes sender metadata and namespaces envelope metadata", (
     notificationType: "Notification",
     subject: "Order created",
   });
+});
+
+Deno.test("fromSns rejects reserved metadata collisions", () => {
+  assertThrows(
+    () =>
+      fromSns({
+        Type: "Notification",
+        MessageId: "message-2",
+        TopicArn: "arn:aws:sns:eu-north-1:123:orders",
+        Message: "{}",
+        Timestamp: "2026-09-02T20:00:00Z",
+        MessageAttributes: { sns: { Type: "String", Value: "custom" } },
+      }),
+    Error,
+    'SNS message attribute "sns" conflicts with reserved Hooksmith metadata key "sns".',
+  );
 });
 
 Deno.test("fromSnsRaw expects a Hooksmith event", () => {

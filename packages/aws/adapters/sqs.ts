@@ -14,6 +14,8 @@ export interface SqsMessage {
 export function fromSqs<TData = unknown>(
   message: SqsMessage,
 ): EventDocument<TData> {
+  assertReservedMetadataKeyAvailable(message.messageAttributes, "sqs");
+
   const timestamp = resolveTimestamp(message.attributes?.SentTimestamp);
   const sqs = compact({
     receiptHandle: message.receiptHandle,
@@ -68,6 +70,17 @@ function readMessageAttribute(attribute: unknown): unknown {
   if (value.stringListValues !== undefined) return value.stringListValues;
   if (value.binaryListValues !== undefined) return value.binaryListValues;
   return attribute;
+}
+
+function assertReservedMetadataKeyAvailable(
+  attributes: Record<string, unknown> | undefined,
+  key: string,
+): void {
+  if (attributes !== undefined && key in attributes) {
+    throw new Error(
+      `SQS message attribute "${key}" conflicts with reserved Hooksmith metadata key "${key}".`,
+    );
+  }
 }
 
 function resolveTimestamp(sentTimestamp: string | undefined): string {
