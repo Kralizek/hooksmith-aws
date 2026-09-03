@@ -15,6 +15,11 @@ export function fromSqs<TData = unknown>(
   message: SqsMessage,
 ): EventDocument<TData> {
   const timestamp = resolveTimestamp(message.attributes?.SentTimestamp);
+  const sqs = compact({
+    receiptHandle: message.receiptHandle,
+    attributes: message.attributes,
+    awsRegion: message.awsRegion,
+  });
 
   return {
     type: "aws.sqs.message",
@@ -28,10 +33,8 @@ export function fromSqs<TData = unknown>(
       id: message.messageId,
     },
     metadata: compact({
-      receiptHandle: message.receiptHandle,
-      attributes: message.attributes,
-      messageAttributes: message.messageAttributes,
-      awsRegion: message.awsRegion,
+      ...readMessageAttributes(message.messageAttributes),
+      sqs,
     }),
     data: parsePayload(message.body) as TData,
   };
@@ -41,6 +44,30 @@ export function fromSqsRaw<TData = unknown>(
   message: Pick<SqsMessage, "body">,
 ): EventDocument<TData> {
   return parseEventDocument<TData>(message.body);
+}
+
+function readMessageAttributes(
+  attributes: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  if (attributes === undefined) return {};
+
+  return Object.fromEntries(
+    Object.entries(attributes).map(([key, attribute]) => [
+      key,
+      readMessageAttribute(attribute),
+    ]),
+  );
+}
+
+function readMessageAttribute(attribute: unknown): unknown {
+  if (attribute === null || typeof attribute !== "object") return attribute;
+
+  const value = attribute as Record<string, unknown>;
+  if (value.stringValue !== undefined) return value.stringValue;
+  if (value.binaryValue !== undefined) return value.binaryValue;
+  if (value.stringListValues !== undefined) return value.stringListValues;
+  if (value.binaryListValues !== undefined) return value.binaryListValues;
+  return attribute;
 }
 
 function resolveTimestamp(sentTimestamp: string | undefined): string {

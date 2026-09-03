@@ -7,16 +7,28 @@ Deno.test("fromSqs maps envelope metadata and body data", () => {
   const event = fromSqs({
     messageId: "message-1",
     body: '{"orderId":"42"}',
+    receiptHandle: "receipt-1",
     eventSourceARN: "arn:aws:sqs:eu-north-1:123:orders",
     awsRegion: "eu-north-1",
     attributes: { SentTimestamp: "1788390000000" },
+    messageAttributes: {
+      correlationId: {
+        dataType: "String",
+        stringValue: "correlation-1",
+      },
+    },
   });
 
   assertEquals(event.type, "aws.sqs.message");
   assertEquals(event.source.id, "arn:aws:sqs:eu-north-1:123:orders");
   assertEquals(event.subject?.id, "message-1");
   assertEquals(event.data, { orderId: "42" });
-  assertEquals(event.metadata?.awsRegion, "eu-north-1");
+  assertEquals(event.metadata?.correlationId, "correlation-1");
+  assertEquals(event.metadata?.sqs, {
+    receiptHandle: "receipt-1",
+    attributes: { SentTimestamp: "1788390000000" },
+    awsRegion: "eu-north-1",
+  });
 });
 
 Deno.test("fromSqs falls back when SentTimestamp is invalid", () => {
@@ -46,19 +58,31 @@ Deno.test("fromSqsRaw expects the body to be a Hooksmith event", () => {
   assertEquals(event.data, { orderId: "42" });
 });
 
-Deno.test("fromSns maps the notification envelope", () => {
+Deno.test("fromSns promotes sender metadata and namespaces envelope metadata", () => {
   const event = fromSns({
     Type: "Notification",
     MessageId: "message-2",
     TopicArn: "arn:aws:sns:eu-north-1:123:orders",
+    Subject: "Order created",
     Message: "hello",
     Timestamp: "2026-09-02T20:00:00Z",
+    MessageAttributes: {
+      correlationId: {
+        Type: "String",
+        Value: "correlation-2",
+      },
+    },
   });
 
   assertEquals(event.type, "aws.sns.notification");
   assertEquals(event.source.id, "arn:aws:sns:eu-north-1:123:orders");
   assertEquals(event.subject?.id, "message-2");
   assertEquals(event.data, "hello");
+  assertEquals(event.metadata?.correlationId, "correlation-2");
+  assertEquals(event.metadata?.sns, {
+    notificationType: "Notification",
+    subject: "Order created",
+  });
 });
 
 Deno.test("fromSnsRaw expects a Hooksmith event", () => {

@@ -3,8 +3,8 @@
 AWS Lambda hosting support for running Hooksmith event processing in Lambda
 functions.
 
-This package intentionally stays small. It assumes the Lambda invocation payload
-is already a Hooksmith `EventDocument`, hydrates it, and passes it to a
+The package root stays deliberately small. It assumes the Lambda invocation
+payload is already a Hooksmith `EventDocument`, hydrates it, and passes it to a
 Hooksmith runtime.
 
 ```ts
@@ -22,11 +22,19 @@ invoked.
 
 ## AWS service triggers
 
-`@hooksmith/aws-lambda` does not interpret SQS, SNS, EventBridge, S3, or other
-AWS service envelopes. Consumers that need those mappings can combine the host
-with [`@hooksmith/aws`](../aws) or provide their own Lambda wrapper before
-calling the Hooksmith handler.
+Service-specific Lambda mechanics are exposed through subpaths without coupling
+the package to `@hooksmith/aws`:
 
-This keeps Lambda hosting independent from AWS service semantics and avoids
-forcing `@hooksmith/aws` on applications whose Lambda payload is already a
-Hooksmith event document.
+- `@hooksmith/aws-lambda/sqs` provides `createProcessor`, `RecordReader`, and the
+  Lambda partial-batch response types. The processor owns record iteration and
+  `batchItemFailures` handling.
+- `@hooksmith/aws-lambda/sns` provides `createProcessor` and `RecordReader`. The
+  processor owns the SNS record loop and fails the invocation when Hooksmith
+  processing is unsuccessful.
+
+Consumers supply the reader, typically `fromSqs` or `fromSns` from
+`@hooksmith/aws`, and a function that processes the resulting `EventDocument`.
+The dependency remains loose: custom readers can be used instead.
+
+EventBridge delivers one event per invocation, so explicit composition remains
+simpler than a dedicated processor.

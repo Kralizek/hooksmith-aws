@@ -18,6 +18,15 @@ export interface SnsNotification {
 export function fromSns<TData = unknown>(
   notification: SnsNotification,
 ): EventDocument<TData> {
+  const sns = compact({
+    notificationType: notification.Type,
+    subject: notification.Subject,
+    signatureVersion: notification.SignatureVersion,
+    signature: notification.Signature,
+    signingCertUrl: notification.SigningCertURL,
+    unsubscribeUrl: notification.UnsubscribeURL,
+  });
+
   return {
     type: "aws.sns.notification",
     timestamp: Temporal.Instant.from(notification.Timestamp).toString(),
@@ -30,13 +39,8 @@ export function fromSns<TData = unknown>(
       id: notification.MessageId,
     },
     metadata: compact({
-      notificationType: notification.Type,
-      subject: notification.Subject,
-      signatureVersion: notification.SignatureVersion,
-      signature: notification.Signature,
-      signingCertUrl: notification.SigningCertURL,
-      unsubscribeUrl: notification.UnsubscribeURL,
-      messageAttributes: notification.MessageAttributes,
+      ...readMessageAttributes(notification.MessageAttributes),
+      sns,
     }),
     data: parsePayload(notification.Message) as TData,
   };
@@ -46,6 +50,26 @@ export function fromSnsRaw<TData = unknown>(
   payload: unknown,
 ): EventDocument<TData> {
   return parseEventDocument<TData>(payload);
+}
+
+function readMessageAttributes(
+  attributes: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  if (attributes === undefined) return {};
+
+  return Object.fromEntries(
+    Object.entries(attributes).map(([key, attribute]) => [
+      key,
+      readMessageAttribute(attribute),
+    ]),
+  );
+}
+
+function readMessageAttribute(attribute: unknown): unknown {
+  if (attribute === null || typeof attribute !== "object") return attribute;
+
+  const value = attribute as Record<string, unknown>;
+  return value.Value ?? attribute;
 }
 
 function compact(

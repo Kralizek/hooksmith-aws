@@ -3,6 +3,7 @@
     "@aws-sdk/client-sqs": "npm:@aws-sdk/client-sqs@^3.0.0",
     "@hooksmith/aws/sqs": "../../packages/aws/sqs.ts",
     "@hooksmith/aws-lambda": "../../packages/aws-lambda/mod.ts",
+    "@hooksmith/aws-lambda/sqs": "../../packages/aws-lambda/sqs.ts",
     "@hooksmith/core": "jsr:@hooksmith/core@^0.7.0",
     "@hooksmith/runtime": "jsr:@hooksmith/runtime@^0.7.0"
   },

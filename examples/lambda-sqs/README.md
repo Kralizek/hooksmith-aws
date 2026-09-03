@@ -1,34 +1,26 @@
 # SQS-triggered Hooksmith Lambda
 
-This example shows how to combine `@hooksmith/aws/sqs` with
-`@hooksmith/aws-lambda` for an SQS-triggered Lambda.
+This example combines `@hooksmith/aws/sqs` with the SQS processor from
+`@hooksmith/aws-lambda/sqs`.
 
 ```text
 SQS Lambda batch
     ↓
-fromSqs(record)
+createProcessor(...)
+    ├─ read: fromSqs
+    └─ process: Hooksmith Lambda handler
     ↓
-Hooksmith EventDocument
-    ↓
-createLambdaHandler(...)
-    ↓
-Hooksmith runtime
+batchItemFailures
 ```
 
-Lambda delivers SQS messages in batches, so the handler loops over `Records` and
-processes each message independently. It returns `batchItemFailures` so AWS can
-retry only the messages that failed instead of replaying the whole batch.
+The processor owns the Lambda/SQS mechanics: it iterates `Records`, adapts each
+record, runs Hooksmith, catches failures, and returns the partial-batch response
+AWS expects. Consumers only provide the record reader and event processor.
 
-The example catches both adapter/runtime exceptions and unsuccessful Hooksmith
-reports and marks the corresponding `messageId` as failed.
-
-## Customize the processing
-
-Change the Hooksmith `config` and `context` exactly as in any other runtime. The
-SQS adapter maps the message body to `event.data` and keeps SQS envelope
-information in the Hooksmith event metadata.
+`fromSqs` maps the message body to `event.data`. Sender-defined SQS message
+attributes are promoted to top-level Hooksmith metadata, while SQS transport
+information is available under `event.metadata.sqs`.
 
 This example does not create an SQS SDK client because receiving the batch is
-handled by the Lambda service integration. AWS SDK client configuration is
-relevant to outbound listeners; see `../outbound-listeners` for `clientConfig`
-and custom-client examples.
+handled by the Lambda service integration. For outbound SQS client
+configuration, see `../listener-sqs`.
