@@ -6,8 +6,8 @@ services.
 This package does not host the Hooksmith runtime. Lambda hosting support lives
 in [`@hooksmith/aws-lambda`](../aws-lambda).
 
-AWS integrations are exposed through focused subpaths so consumers only load
-the dependencies they actually use:
+AWS integrations are exposed through focused subpaths so consumers only load the
+dependencies they actually use:
 
 - `@hooksmith/aws/sqs`
 - `@hooksmith/aws/sns`
@@ -105,8 +105,9 @@ contain valid JSON for the next pipeline value. Function errors, non-200 status
 codes, missing payloads, and invalid JSON fail the transformation.
 
 The pipeline integration is isolated behind its own subpath. Consumers that use
-only the AWS adapters/listeners do not import `@hooksmith/pipeline`, and consumers
-that do not use Lambda do not import the Lambda SDK through this integration.
+only the AWS adapters/listeners do not import `@hooksmith/pipeline`, and
+consumers that do not use Lambda do not import the Lambda SDK through this
+integration.
 
 As with the listeners, use `clientConfig` for normal SDK customization or inject
 a compatible client through `client` for custom credentials, LocalStack, or

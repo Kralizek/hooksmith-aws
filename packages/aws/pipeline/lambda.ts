@@ -50,7 +50,9 @@ export function lambda<TInput, TOutput>(
 
       if (response.StatusCode !== 200) {
         throw new Error(
-          `Lambda ${options.functionName} returned status ${response.StatusCode ?? "unknown"}.`,
+          `Lambda ${options.functionName} returned status ${
+            response.StatusCode ?? "unknown"
+          }.`,
         );
       }
 

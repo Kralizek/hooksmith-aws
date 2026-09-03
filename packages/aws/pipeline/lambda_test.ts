@@ -27,13 +27,12 @@ Deno.test("lambda transforms input through synchronous invocation", async () => 
     client: {
       send(value) {
         command = value;
-        return Promise.resolve({
-          $metadata: {},
+        return response({
           StatusCode: 200,
           Payload: new TextEncoder().encode(
             '{"orderId":"42","risk":"low"}',
           ),
-        } satisfies InvokeCommandOutput);
+        });
       },
     },
   });
@@ -55,12 +54,11 @@ Deno.test("lambda rejects function errors", async () => {
     functionName: "enrich-order",
     client: {
       send(_value: InvokeCommand) {
-        return Promise.resolve({
-          $metadata: {},
+        return response({
           StatusCode: 200,
           FunctionError: "Unhandled",
           Payload: new TextEncoder().encode('{"errorMessage":"boom"}'),
-        } satisfies InvokeCommandOutput);
+        });
       },
     },
   });
@@ -79,10 +77,7 @@ Deno.test("lambda rejects missing response payloads", async () => {
     functionName: "enrich-order",
     client: {
       send(_value: InvokeCommand) {
-        return Promise.resolve({
-          $metadata: {},
-          StatusCode: 200,
-        } satisfies InvokeCommandOutput);
+        return response({ StatusCode: 200 });
       },
     },
   });
@@ -99,11 +94,10 @@ Deno.test("lambda rejects invalid JSON response payloads", async () => {
     functionName: "enrich-order",
     client: {
       send(_value: InvokeCommand) {
-        return Promise.resolve({
-          $metadata: {},
+        return response({
           StatusCode: 200,
           Payload: new TextEncoder().encode("not-json"),
-        } satisfies InvokeCommandOutput);
+        });
       },
     },
   });
@@ -120,10 +114,7 @@ Deno.test("lambda rejects non-200 invocation status", async () => {
     functionName: "enrich-order",
     client: {
       send(_value: InvokeCommand) {
-        return Promise.resolve({
-          $metadata: {},
-          StatusCode: 500,
-        } satisfies InvokeCommandOutput);
+        return response({ StatusCode: 500 });
       },
     },
   });
@@ -134,3 +125,9 @@ Deno.test("lambda rejects non-200 invocation status", async () => {
     "Lambda enrich-order returned status 500.",
   );
 });
+
+function response(
+  output: Omit<InvokeCommandOutput, "$metadata">,
+): Promise<InvokeCommandOutput> {
+  return Promise.resolve({ $metadata: {}, ...output });
+}
