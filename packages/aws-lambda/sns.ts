@@ -18,7 +18,9 @@ export interface LambdaEvent<TNotification> {
 }
 
 type AnyRecordReader = RecordReader<never, unknown>;
-type ReaderNotification<TReader extends AnyRecordReader> = Parameters<TReader>[0];
+type ReaderNotification<TReader extends AnyRecordReader> = Parameters<
+  TReader
+>[0];
 type ReaderData<TReader extends AnyRecordReader> =
   Awaited<ReturnType<TReader>> extends EventDocument<infer TData> ? TData
     : never;
