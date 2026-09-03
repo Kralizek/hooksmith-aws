@@ -1,8 +1,4 @@
-import type {
-  EventProcessor,
-  EventReader,
-  LambdaHandler,
-} from "./types.ts";
+import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
 export interface Notification {
   Type: string;
