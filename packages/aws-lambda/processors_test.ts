@@ -4,13 +4,8 @@ import type { RunReport } from "@hooksmith/runtime";
 import * as sns from "./sns.ts";
 import * as sqs from "./sqs.ts";
 
-interface TestRecord {
-  messageId: string;
-  body: string;
-}
-
 Deno.test("SQS processor returns failed item identifiers", async () => {
-  const processor = sqs.createProcessor<TestRecord, { fail?: boolean }>(
+  const processor = sqs.createProcessor<{ fail?: boolean }>(
     (record) => {
       if (record.body === "throw") {
         throw new Error("bad record");
@@ -38,8 +33,8 @@ Deno.test("SQS processor returns failed item identifiers", async () => {
 
 Deno.test("SNS processor processes every notification", async () => {
   const processed: string[] = [];
-  const processor = sns.createProcessor<string, string>(
-    (value) => document(value),
+  const processor = sns.createProcessor<string>(
+    (notification) => document(notification.Message),
     (event) => {
       processed.push(event.data);
       return Promise.resolve(report(true));
@@ -47,24 +42,40 @@ Deno.test("SNS processor processes every notification", async () => {
   );
 
   await processor({
-    Records: [{ Sns: "one" }, { Sns: "two" }],
+    Records: [
+      { Sns: notification("one", "message-1") },
+      { Sns: notification("two", "message-2") },
+    ],
   });
 
   assertEquals(processed, ["one", "two"]);
 });
 
 Deno.test("SNS processor rejects unsuccessful Hooksmith processing", async () => {
-  const processor = sns.createProcessor<string, string>(
-    (value) => document(value),
+  const processor = sns.createProcessor<string>(
+    (value) => document(value.Message),
     () => Promise.resolve(report(false)),
   );
 
   await assertRejects(
-    () => processor({ Records: [{ Sns: "failed" }] }),
+    () =>
+      processor({
+        Records: [{ Sns: notification("failed", "message-1") }],
+      }),
     Error,
     "Hooksmith failed to process an SNS notification.",
   );
 });
+
+function notification(message: string, messageId: string): sns.Notification {
+  return {
+    Type: "Notification",
+    MessageId: messageId,
+    TopicArn: "arn:aws:sns:eu-north-1:123:orders",
+    Message: message,
+    Timestamp: "2026-09-03T00:00:00Z",
+  };
+}
 
 function document<TData>(data: TData): EventDocument<TData> {
   return {

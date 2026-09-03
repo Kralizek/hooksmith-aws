@@ -1,16 +1,26 @@
 import type { EventDocument } from "@hooksmith/core";
 import type { RunReport } from "@hooksmith/runtime";
 
-export type RecordReader<TRecord, TData = unknown> = (
-  record: TRecord,
+export interface LambdaRecord {
+  messageId: string;
+  body: string;
+  receiptHandle?: string;
+  attributes?: Record<string, string>;
+  messageAttributes?: Record<string, unknown>;
+  eventSourceARN?: string;
+  awsRegion?: string;
+}
+
+export type RecordReader<TData = unknown> = (
+  record: LambdaRecord,
 ) => EventDocument<TData> | Promise<EventDocument<TData>>;
 
 export type EventProcessor<TData = unknown> = (
   event: EventDocument<TData>,
 ) => Promise<RunReport>;
 
-export interface LambdaEvent<TRecord> {
-  Records: TRecord[];
+export interface LambdaEvent {
+  Records: LambdaRecord[];
 }
 
 export interface BatchItemFailure {
@@ -21,13 +31,10 @@ export interface BatchResponse {
   batchItemFailures: BatchItemFailure[];
 }
 
-export function createProcessor<
-  TRecord extends { messageId: string },
-  TData = unknown,
->(
-  read: RecordReader<TRecord, TData>,
+export function createProcessor<TData = unknown>(
+  read: RecordReader<TData>,
   process: EventProcessor<TData>,
-): (event: LambdaEvent<TRecord>) => Promise<BatchResponse> {
+): (event: LambdaEvent) => Promise<BatchResponse> {
   return async (event) => {
     const batchItemFailures: BatchItemFailure[] = [];
 

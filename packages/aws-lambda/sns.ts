@@ -1,26 +1,40 @@
 import type { EventDocument } from "@hooksmith/core";
 import type { RunReport } from "@hooksmith/runtime";
 
-export type RecordReader<TNotification, TData = unknown> = (
-  notification: TNotification,
+export interface Notification {
+  Type: string;
+  MessageId: string;
+  TopicArn: string;
+  Subject?: string;
+  Message: string;
+  Timestamp: string;
+  SignatureVersion?: string;
+  Signature?: string;
+  SigningCertURL?: string;
+  UnsubscribeURL?: string;
+  MessageAttributes?: Record<string, unknown>;
+}
+
+export interface LambdaRecord {
+  Sns: Notification;
+}
+
+export type RecordReader<TData = unknown> = (
+  notification: Notification,
 ) => EventDocument<TData> | Promise<EventDocument<TData>>;
 
 export type EventProcessor<TData = unknown> = (
   event: EventDocument<TData>,
 ) => Promise<RunReport>;
 
-export interface LambdaRecord<TNotification> {
-  Sns: TNotification;
+export interface LambdaEvent {
+  Records: LambdaRecord[];
 }
 
-export interface LambdaEvent<TNotification> {
-  Records: Array<LambdaRecord<TNotification>>;
-}
-
-export function createProcessor<TNotification, TData = unknown>(
-  read: RecordReader<TNotification, TData>,
+export function createProcessor<TData = unknown>(
+  read: RecordReader<TData>,
   process: EventProcessor<TData>,
-): (event: LambdaEvent<TNotification>) => Promise<void> {
+): (event: LambdaEvent) => Promise<void> {
   return async (event) => {
     for (const record of event.Records) {
       const document = await read(record.Sns);
