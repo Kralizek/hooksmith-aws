@@ -32,6 +32,32 @@ Deno.test("SQS handler returns failed item identifiers", async () => {
   });
 });
 
+Deno.test("SQS handler exposes record exceptions without changing batch response", async () => {
+  const observed: Array<{ error: unknown; record: sqs.LambdaRecord }> = [];
+  const handler = sqs.createHandler(
+    () => {
+      throw new Error("bad record");
+    },
+    () => Promise.resolve(report(true)),
+    {
+      onRecordError(error, record) {
+        observed.push({ error, record });
+      },
+    },
+  );
+
+  const result = await handler({
+    Records: [{ messageId: "broken", body: "throw" }],
+  });
+
+  assertEquals(result, {
+    batchItemFailures: [{ itemIdentifier: "broken" }],
+  });
+  assertEquals(observed.length, 1);
+  assertEquals((observed[0].error as Error).message, "bad record");
+  assertEquals(observed[0].record.messageId, "broken");
+});
+
 Deno.test("SNS handler processes every notification", async () => {
   const processed: string[] = [];
   const handler = sns.createHandler<string>(
@@ -70,6 +96,31 @@ Deno.test("SNS handler rejects unsuccessful Hooksmith processing", async () => {
   assertEquals(error.cause, {
     messageId: "message-1",
     topicArn: "arn:aws:sns:eu-north-1:123:orders",
+  });
+});
+
+Deno.test("SNS handler preserves notification context for thrown errors", async () => {
+  const originalError = new Error("reader failed");
+  const handler = sns.createHandler(
+    () => {
+      throw originalError;
+    },
+    () => Promise.resolve(report(true)),
+  );
+
+  const error = await assertRejects(
+    () =>
+      handler({
+        Records: [{ Sns: notification("failed", "message-1") }],
+      }),
+    Error,
+    "Hooksmith failed to process an SNS notification.",
+  );
+
+  assertEquals(error.cause, {
+    messageId: "message-1",
+    topicArn: "arn:aws:sns:eu-north-1:123:orders",
+    error: originalError,
   });
 });
 

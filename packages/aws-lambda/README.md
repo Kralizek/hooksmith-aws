@@ -45,10 +45,12 @@ the package to `@hooksmith/aws`:
 
 - `@hooksmith/aws-lambda/sqs` provides `createHandler` and the Lambda
   partial-batch response types. The handler owns record iteration and
-  `batchItemFailures` handling.
+  `batchItemFailures` handling. An optional `onRecordError` hook can observe
+  reader or processor exceptions while preserving partial-batch behavior.
 - `@hooksmith/aws-lambda/sns` provides `createHandler`. The handler owns the SNS
   record loop and fails the invocation when Hooksmith processing is
-  unsuccessful.
+  unsuccessful. Failures include the SNS message and topic identifiers in the
+  error cause.
 - `@hooksmith/aws-lambda/eventbridge` provides `createHandler`. The handler
   adapts one EventBridge event and fails the invocation when Hooksmith
   processing is unsuccessful.

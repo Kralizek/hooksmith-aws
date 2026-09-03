@@ -22,9 +22,17 @@ export interface BatchResponse {
   batchItemFailures: BatchItemFailure[];
 }
 
+export interface HandlerOptions {
+  onRecordError?: (
+    error: unknown,
+    record: LambdaRecord,
+  ) => void | Promise<void>;
+}
+
 export function createHandler<TData = unknown>(
   read: EventReader<LambdaRecord, TData>,
   processor: EventProcessor<TData>,
+  options: HandlerOptions = {},
 ): LambdaHandler<LambdaEvent, BatchResponse> {
   return async (event) => {
     const batchItemFailures: BatchItemFailure[] = [];
@@ -36,7 +44,8 @@ export function createHandler<TData = unknown>(
         if (!report.success) {
           batchItemFailures.push({ itemIdentifier: record.messageId });
         }
-      } catch {
+      } catch (error) {
+        await options.onRecordError?.(error, record);
         batchItemFailures.push({ itemIdentifier: record.messageId });
       }
     }

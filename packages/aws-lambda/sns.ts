@@ -28,8 +28,20 @@ export function createHandler<TData = unknown>(
 ): LambdaHandler<LambdaEvent, void> {
   return async (event) => {
     for (const record of event.Records) {
-      const document = await read(record.Sns);
-      const report = await processor(document);
+      let report;
+      try {
+        const document = await read(record.Sns);
+        report = await processor(document);
+      } catch (error) {
+        throw new Error("Hooksmith failed to process an SNS notification.", {
+          cause: {
+            messageId: record.Sns.MessageId,
+            topicArn: record.Sns.TopicArn,
+            error,
+          },
+        });
+      }
+
       if (!report.success) {
         throw new Error("Hooksmith failed to process an SNS notification.", {
           cause: {
