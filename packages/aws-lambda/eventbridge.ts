@@ -1,6 +1,7 @@
 import type { RunReport } from "@hooksmith/runtime";
 import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
+/** AWS EventBridge event shape accepted by the Lambda hosting adapter. */
 export interface LambdaEvent<TDetail = unknown> {
   version: string;
   id: string;
