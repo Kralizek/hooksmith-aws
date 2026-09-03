@@ -1,5 +1,6 @@
 import type { Context, Event } from "@hooksmith/core";
 
+/** Fixed value or event-aware factory resolved by AWS integrations. */
 export type ValueOrFactory<T, TEvent extends Event = Event> =
   | T
   | ((event: TEvent, context: Context) => T | Promise<T>);
