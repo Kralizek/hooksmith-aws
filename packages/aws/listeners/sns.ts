@@ -9,10 +9,12 @@ import {
 import { stringifyPayload } from "../shared/payload.ts";
 import { resolve, type ValueOrFactory } from "../shared/value.ts";
 
+/** Minimal SNS client contract used for dependency injection. */
 export interface SnsClientLike {
   send(command: PublishCommand): Promise<PublishCommandOutput>;
 }
 
+/** Options used to publish an SNS message from a Hooksmith event. */
 export interface PublishSnsMessageOptions<TEvent extends Event = Event> {
   topicArn: ValueOrFactory<string, TEvent>;
   message?: ValueOrFactory<unknown, TEvent>;
