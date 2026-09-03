@@ -32,9 +32,12 @@ the package to `@hooksmith/aws`:
 - `@hooksmith/aws-lambda/sns` provides `createHandler` and `RecordReader`. The
   handler owns the SNS record loop and fails the invocation when Hooksmith
   processing is unsuccessful.
+- `@hooksmith/aws-lambda/eventbridge` provides `createHandler` and `EventReader`.
+  The handler adapts one EventBridge event and fails the invocation when
+  Hooksmith processing is unsuccessful.
 
-Consumers supply the reader, typically `fromSqs` or `fromSns` from
-`@hooksmith/aws`, plus the common processor:
+Consumers supply the reader, typically `fromSqs`, `fromSns`, or
+`fromEventBridge` from `@hooksmith/aws`, plus the common processor:
 
 ```ts
 import { fromSqs } from "@hooksmith/aws/sqs";
@@ -47,6 +50,3 @@ export const handler = createHandler(fromSqs, processor);
 ```
 
 The dependency remains loose: custom readers can be used instead.
-
-EventBridge delivers one event per invocation, so explicit composition remains
-simpler than a dedicated handler subpath.

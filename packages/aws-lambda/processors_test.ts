@@ -1,6 +1,7 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { EventDocument } from "@hooksmith/core";
 import type { RunReport } from "@hooksmith/runtime";
+import * as eventbridge from "./eventbridge.ts";
 import * as sns from "./sns.ts";
 import * as sqs from "./sqs.ts";
 
@@ -67,6 +68,30 @@ Deno.test("SNS handler rejects unsuccessful Hooksmith processing", async () => {
   );
 });
 
+Deno.test("EventBridge handler processes one event", async () => {
+  const handler = eventbridge.createHandler<{ orderId: string }>(
+    (event) => document(event.detail),
+    () => Promise.resolve(report(true)),
+  );
+
+  const result = await handler(eventBridgeEvent({ orderId: "42" }));
+
+  assertEquals(result.success, true);
+});
+
+Deno.test("EventBridge handler rejects unsuccessful Hooksmith processing", async () => {
+  const handler = eventbridge.createHandler(
+    (event) => document(event.detail),
+    () => Promise.resolve(report(false)),
+  );
+
+  await assertRejects(
+    () => handler(eventBridgeEvent({ orderId: "42" })),
+    Error,
+    "Hooksmith failed to process the EventBridge event.",
+  );
+});
+
 function notification(message: string, messageId: string): sns.Notification {
   return {
     Type: "Notification",
@@ -74,6 +99,22 @@ function notification(message: string, messageId: string): sns.Notification {
     TopicArn: "arn:aws:sns:eu-north-1:123:orders",
     Message: message,
     Timestamp: "2026-09-03T00:00:00Z",
+  };
+}
+
+function eventBridgeEvent<TDetail>(
+  detail: TDetail,
+): eventbridge.LambdaEvent<TDetail> {
+  return {
+    version: "0",
+    id: "event-1",
+    "detail-type": "order.created",
+    source: "com.example.orders",
+    account: "123",
+    time: "2026-09-03T00:00:00Z",
+    region: "eu-north-1",
+    resources: [],
+    detail,
   };
 }
 

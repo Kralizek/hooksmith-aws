@@ -1,16 +1,16 @@
 # EventBridge-triggered Hooksmith Lambda
 
-This is the simplest AWS-trigger composition example: one EventBridge event
-becomes one Hooksmith event.
+This example combines the EventBridge adapter with the EventBridge Lambda
+handler.
 
 ```text
 EventBridge event
     ↓
-fromEventBridge(event)
+createHandler(fromEventBridge, processor)
     ↓
 Hooksmith EventDocument
     ↓
-createLambdaHandler(...)
+createProcessor(...)
     ↓
 Hooksmith runtime
 ```
@@ -19,9 +19,9 @@ Hooksmith runtime
 `event.data`, and keeps the EventBridge envelope fields as Hooksmith
 source/metadata.
 
-The handler processes the adapted event and throws if the Hooksmith report is
-unsuccessful so the Lambda invocation fails and EventBridge/Lambda retry or
-dead-letter behavior can apply.
+The EventBridge Lambda handler processes the adapted event and throws if the
+Hooksmith report is unsuccessful so the Lambda invocation fails and
+EventBridge/Lambda retry or dead-letter behavior can apply.
 
 ## Customize the processing
 
