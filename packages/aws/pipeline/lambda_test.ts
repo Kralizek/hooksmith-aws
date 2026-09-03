@@ -47,6 +47,30 @@ Deno.test("lambda transforms input through synchronous invocation", async () => 
   assertEquals(result, { orderId: "42", risk: "low" });
 });
 
+Deno.test("lambda JSON-encodes string input", async () => {
+  let command: InvokeCommand | undefined;
+  const transformer = lambda<string, string>({
+    functionName: "echo",
+    client: {
+      send(value) {
+        command = value;
+        return response({
+          StatusCode: 200,
+          Payload: payload('"foo"'),
+        });
+      },
+    },
+  });
+
+  const result = await transformer.transform("foo", context);
+
+  assertEquals(
+    new TextDecoder().decode(command?.input.Payload as Uint8Array),
+    '"foo"',
+  );
+  assertEquals(result, "foo");
+});
+
 Deno.test("lambda rejects function errors", async () => {
   const transformer = lambda<unknown, unknown>({
     functionName: "enrich-order",
