@@ -1,6 +1,7 @@
 import type { EventDocument } from "@hooksmith/core";
 import { parseEventDocument, parsePayload } from "../shared/payload.ts";
 
+/** SNS notification shape adapted into a Hooksmith event document. */
 export interface SnsNotification {
   Type: string;
   MessageId: string;
