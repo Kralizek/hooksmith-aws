@@ -1,6 +1,9 @@
 # Outbound AWS listeners
 
-This example shows a Hooksmith route sending the same event to two AWS services: SQS and EventBridge. It intentionally uses only two listeners so the routing shape stays easy to read; SNS publishing and Lambda invocation follow the same pattern through `@hooksmith/aws/sns` and `@hooksmith/aws/lambda`.
+This example shows a Hooksmith route sending the same event to two AWS services:
+SQS and EventBridge. It intentionally uses only two listeners so the routing
+shape stays easy to read; SNS publishing and Lambda invocation follow the same
+pattern through `@hooksmith/aws/sns` and `@hooksmith/aws/lambda`.
 
 Set these environment variables before running the configuration:
 
@@ -9,7 +12,8 @@ Set these environment variables before running the configuration:
 
 ## AWS client configuration
 
-The listeners use the normal AWS SDK credential and region resolution by default. You can override SDK configuration directly:
+The listeners use the normal AWS SDK credential and region resolution by
+default. You can override SDK configuration directly:
 
 ```ts
 sendSqsMessage({
@@ -20,7 +24,8 @@ sendSqsMessage({
 });
 ```
 
-For complete control, create and inject the AWS SDK client yourself. This is useful for custom credentials, LocalStack, or another endpoint:
+For complete control, create and inject the AWS SDK client yourself. This is
+useful for custom credentials, LocalStack, or another endpoint:
 
 ```ts
 import { SQSClient } from "@aws-sdk/client-sqs";
@@ -37,4 +42,5 @@ sendSqsMessage({
 });
 ```
 
-The same `clientConfig`/`client` pattern is available on the SNS, EventBridge, and Lambda listeners.
+The same `clientConfig`/`client` pattern is available on the SNS, EventBridge,
+and Lambda listeners.
