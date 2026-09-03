@@ -29,9 +29,7 @@ Deno.test("lambda transforms input through synchronous invocation", async () => 
         command = value;
         return response({
           StatusCode: 200,
-          Payload: new TextEncoder().encode(
-            '{"orderId":"42","risk":"low"}',
-          ),
+          Payload: payload('{"orderId":"42","risk":"low"}'),
         });
       },
     },
@@ -57,14 +55,14 @@ Deno.test("lambda rejects function errors", async () => {
         return response({
           StatusCode: 200,
           FunctionError: "Unhandled",
-          Payload: new TextEncoder().encode('{"errorMessage":"boom"}'),
+          Payload: payload('{"errorMessage":"boom"}'),
         });
       },
     },
   });
 
   const error = await assertRejects(
-    () => transformer.transform({}, context),
+    () => Promise.resolve(transformer.transform({}, context)),
     Error,
     "Lambda enrich-order returned a function error: Unhandled.",
   );
@@ -83,7 +81,7 @@ Deno.test("lambda rejects missing response payloads", async () => {
   });
 
   await assertRejects(
-    () => transformer.transform({}, context),
+    () => Promise.resolve(transformer.transform({}, context)),
     Error,
     "Lambda enrich-order returned no payload.",
   );
@@ -96,14 +94,14 @@ Deno.test("lambda rejects invalid JSON response payloads", async () => {
       send(_value: InvokeCommand) {
         return response({
           StatusCode: 200,
-          Payload: new TextEncoder().encode("not-json"),
+          Payload: payload("not-json"),
         });
       },
     },
   });
 
   await assertRejects(
-    () => transformer.transform({}, context),
+    () => Promise.resolve(transformer.transform({}, context)),
     TypeError,
     "Lambda enrich-order returned an invalid JSON payload.",
   );
@@ -120,11 +118,17 @@ Deno.test("lambda rejects non-200 invocation status", async () => {
   });
 
   await assertRejects(
-    () => transformer.transform({}, context),
+    () => Promise.resolve(transformer.transform({}, context)),
     Error,
     "Lambda enrich-order returned status 500.",
   );
 });
+
+function payload(value: string): NonNullable<InvokeCommandOutput["Payload"]> {
+  return new TextEncoder().encode(value) as NonNullable<
+    InvokeCommandOutput["Payload"]
+  >;
+}
 
 function response(
   output: Omit<InvokeCommandOutput, "$metadata">,
