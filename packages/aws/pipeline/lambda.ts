@@ -6,7 +6,6 @@ import {
   type LambdaClientConfig,
 } from "@aws-sdk/client-lambda";
 import type { Transformer } from "@hooksmith/pipeline";
-import { stringifyPayload } from "../shared/payload.ts";
 
 export interface LambdaClientLike {
   send(command: InvokeCommand): Promise<InvokeCommandOutput>;
@@ -39,12 +38,19 @@ export function lambda<TInput, TOutput>(
   return {
     name: options.name ?? `aws-lambda:${options.functionName}`,
     async transform(input): Promise<TOutput> {
+      const serialized = JSON.stringify(input);
+      if (serialized === undefined) {
+        throw new TypeError(
+          "Lambda transformer input must be JSON-serializable.",
+        );
+      }
+
       const response = await client.send(
         new InvokeCommand({
           ...options.input,
           FunctionName: options.functionName,
           InvocationType: "RequestResponse",
-          Payload: encoder.encode(stringifyPayload(input)),
+          Payload: encoder.encode(serialized),
         }),
       );
 
