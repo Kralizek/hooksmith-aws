@@ -1,6 +1,7 @@
 import type { EventDocument } from "@hooksmith/core";
 import { parseEventDocument, parsePayload } from "../shared/payload.ts";
 
+/** SQS message shape adapted into a Hooksmith event document. */
 export interface SqsMessage {
   messageId: string;
   body: string;
