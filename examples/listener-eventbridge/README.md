@@ -1,7 +1,6 @@
 # EventBridge listener
 
-Minimal reference for `putEventBridgeEvent` from
-`@hooksmith/aws/eventbridge`.
+Minimal reference for `putEventBridgeEvent` from `@hooksmith/aws/eventbridge`.
 
 `EVENT_BUS_NAME` defaults to `default`; `AWS_REGION` is optional. By default the
 listener derives `Source` from the Hooksmith event source, `DetailType` from the
