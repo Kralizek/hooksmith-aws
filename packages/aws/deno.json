@@ -5,6 +5,7 @@
     ".": "./mod.ts",
     "./eventbridge": "./eventbridge.ts",
     "./lambda": "./lambda.ts",
+    "./pipeline/lambda": "./pipeline/lambda.ts",
     "./sns": "./sns.ts",
     "./sqs": "./sqs.ts"
   }

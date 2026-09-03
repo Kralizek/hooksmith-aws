@@ -6,13 +6,14 @@ services.
 This package does not host the Hooksmith runtime. Lambda hosting support lives
 in [`@hooksmith/aws-lambda`](../aws-lambda).
 
-AWS service integrations are exposed through service-specific subpaths so
-consumers only load the AWS SDK modules they actually use:
+AWS integrations are exposed through focused subpaths so consumers only load
+the dependencies they actually use:
 
 - `@hooksmith/aws/sqs`
 - `@hooksmith/aws/sns`
 - `@hooksmith/aws/eventbridge`
 - `@hooksmith/aws/lambda`
+- `@hooksmith/aws/pipeline/lambda`
 
 The package root contains only shared AWS integration types.
 
@@ -80,6 +81,37 @@ the listener abstraction.
 Each listener exposes relevant native AWS SDK input fields through `input` (or
 `entry` for EventBridge). Explicit Hooksmith-friendly options and fixed listener
 semantics cannot be overridden through the native escape hatch.
+
+## Pipeline transformations
+
+`lambda()` from `@hooksmith/aws/pipeline/lambda` turns a synchronous Lambda
+invocation into a Hooksmith pipeline transformation.
+
+```ts
+import { lambda } from "@hooksmith/aws/pipeline/lambda";
+import { pipe } from "@hooksmith/pipeline";
+
+const listener = pipe(
+  lambda<Input, Output>({
+    functionName: "enrich-order",
+  }),
+  terminalListener,
+);
+```
+
+The transformer always uses `InvocationType: "RequestResponse"`. It serializes
+the current pipeline value as JSON and requires the Lambda response payload to
+contain valid JSON for the next pipeline value. Function errors, non-200 status
+codes, missing payloads, and invalid JSON fail the transformation.
+
+The pipeline integration is isolated behind its own subpath. Consumers that use
+only the AWS adapters/listeners do not import `@hooksmith/pipeline`, and consumers
+that do not use Lambda do not import the Lambda SDK through this integration.
+
+As with the listeners, use `clientConfig` for normal SDK customization or inject
+a compatible client through `client` for custom credentials, LocalStack, or
+another endpoint. Native invocation fields can be supplied through `input`, but
+`FunctionName`, `Payload`, and `InvocationType` are owned by the transformer.
 
 AWS credentials and region use the normal AWS SDK credential and configuration
 resolution unless a custom client or client configuration is supplied.
