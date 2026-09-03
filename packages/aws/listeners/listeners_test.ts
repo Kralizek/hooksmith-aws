@@ -150,7 +150,7 @@ Deno.test("putEventBridgeEvent reports partial API failure", async () => {
   assertEquals(result.success, false);
 });
 
-Deno.test("invokeLambdaFunction serializes event data", async () => {
+Deno.test("invokeLambdaFunction invokes asynchronously with event data", async () => {
   let command: InvokeCommand | undefined;
   const listener = invokeLambdaFunction({
     functionName: "process-order",
@@ -159,8 +159,8 @@ Deno.test("invokeLambdaFunction serializes event data", async () => {
         command = value;
         return Promise.resolve(
           {
-            $metadata: {},
-            StatusCode: 200,
+            $metadata: { requestId: "request-1" },
+            StatusCode: 202,
           } satisfies InvokeCommandOutput,
         );
       },
@@ -170,11 +170,16 @@ Deno.test("invokeLambdaFunction serializes event data", async () => {
   const result = await listener.run(event, context);
 
   assertEquals(command?.input.FunctionName, "process-order");
+  assertEquals(command?.input.InvocationType, "Event");
   assertEquals(
     new TextDecoder().decode(command?.input.Payload as Uint8Array),
     '{"orderId":"42"}',
   );
   assertEquals(result.success, true);
+  assertEquals(result.data, {
+    statusCode: 202,
+    requestId: "request-1",
+  });
 });
 
 Deno.test("invokeLambdaFunction rejects non-serializable payloads", async () => {
@@ -191,7 +196,7 @@ Deno.test("invokeLambdaFunction rejects non-serializable payloads", async () => 
         return Promise.resolve(
           {
             $metadata: {},
-            StatusCode: 200,
+            StatusCode: 202,
           } satisfies InvokeCommandOutput,
         );
       },

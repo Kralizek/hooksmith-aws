@@ -1,13 +1,9 @@
-import type { Event, EventDocument } from "@hooksmith/core";
-import { hydrateEvent, type RunReport, type Runtime } from "@hooksmith/runtime";
+import type { EventDocument } from "@hooksmith/core";
+import type { RunReport } from "@hooksmith/runtime";
+import type { EventProcessor, LambdaHandler } from "./types.ts";
 
-export type LambdaHandler<TData = unknown> = (
-  event: EventDocument<TData>,
-) => Promise<RunReport>;
-
-export function createLambdaHandler<TData = unknown>(
-  runtime: Runtime<Event<TData>>,
-): LambdaHandler<TData> {
-  return (document) =>
-    Promise.resolve().then(() => runtime.process(hydrateEvent(document)));
+export function createHandler<TData = unknown>(
+  processor: EventProcessor<TData>,
+): LambdaHandler<EventDocument<TData>, RunReport> {
+  return processor;
 }

@@ -1,7 +1,8 @@
 import type { Config, Context } from "@hooksmith/core";
-import { fromSns, type SnsNotification } from "@hooksmith/aws/sns";
-import { createLambdaHandler } from "@hooksmith/aws-lambda";
-import { createRuntime, type RunReport } from "@hooksmith/runtime";
+import { fromSns } from "@hooksmith/aws/sns";
+import { createProcessor } from "@hooksmith/aws-lambda";
+import { createHandler } from "@hooksmith/aws-lambda/sns";
+import { createRuntime } from "@hooksmith/runtime";
 
 const config: Config = {
   routes: [
@@ -21,22 +22,6 @@ const config: Config = {
 };
 
 const context: Context = { log: console };
-const processEvent = createLambdaHandler(createRuntime(config, context));
+const processor = createProcessor(createRuntime(config, context));
 
-export interface SnsLambdaEvent {
-  Records: Array<{ Sns: SnsNotification }>;
-}
-
-export async function handler(event: SnsLambdaEvent): Promise<RunReport[]> {
-  const reports: RunReport[] = [];
-
-  for (const record of event.Records) {
-    const report = await processEvent(fromSns(record.Sns));
-    if (!report.success) {
-      throw new Error("Hooksmith failed to process an SNS notification.");
-    }
-    reports.push(report);
-  }
-
-  return reports;
-}
+export const handler = createHandler(fromSns, processor);

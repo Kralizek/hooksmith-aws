@@ -1,5 +1,10 @@
 {
   "name": "@hooksmith/aws-lambda",
   "version": "0.1.0",
-  "exports": "./mod.ts"
+  "exports": {
+    ".": "./mod.ts",
+    "./eventbridge": "./eventbridge.ts",
+    "./sns": "./sns.ts",
+    "./sqs": "./sqs.ts"
+  }
 }

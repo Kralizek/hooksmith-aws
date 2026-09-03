@@ -7,7 +7,6 @@ export default {
       listeners: [
         invokeLambdaFunction({
           functionName: Deno.env.get("FUNCTION_NAME")!,
-          input: { InvocationType: "Event" },
           clientConfig: { region: Deno.env.get("AWS_REGION") },
         }),
       ],

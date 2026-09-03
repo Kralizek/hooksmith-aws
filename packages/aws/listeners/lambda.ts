@@ -17,7 +17,7 @@ export interface InvokeLambdaFunctionOptions<TEvent extends Event = Event> {
   functionName: ValueOrFactory<string, TEvent>;
   payload?: ValueOrFactory<unknown, TEvent>;
   input?: ValueOrFactory<
-    Omit<InvokeCommandInput, "FunctionName" | "Payload">,
+    Omit<InvokeCommandInput, "FunctionName" | "Payload" | "InvocationType">,
     TEvent
   >;
   client?: LambdaClientLike;
@@ -46,22 +46,20 @@ export function invokeLambdaFunction<TEvent extends Event = Event>(
           ...nativeInput,
           FunctionName: functionName,
           Payload: encoder.encode(stringifyPayload(payload)),
+          InvocationType: "Event",
         }),
       );
       const statusCode = response.StatusCode;
-      const success = response.FunctionError === undefined &&
-        statusCode !== undefined && statusCode >= 200 && statusCode < 300;
+      const success = statusCode === 202;
 
       return {
         success,
         message: success
-          ? `Lambda ${functionName} invoked.`
-          : `Lambda ${functionName} invocation failed.`,
+          ? `Lambda ${functionName} invoked asynchronously.`
+          : `Lambda ${functionName} asynchronous invocation failed.`,
         data: {
           statusCode,
-          functionError: response.FunctionError,
-          executedVersion: response.ExecutedVersion,
-          logResult: response.LogResult,
+          requestId: response.$metadata.requestId,
         },
       };
     },

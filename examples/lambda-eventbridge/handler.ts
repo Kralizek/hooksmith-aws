@@ -1,10 +1,8 @@
 import type { Config, Context } from "@hooksmith/core";
-import {
-  type EventBridgeEvent,
-  fromEventBridge,
-} from "@hooksmith/aws/eventbridge";
-import { createLambdaHandler } from "@hooksmith/aws-lambda";
-import { createRuntime, type RunReport } from "@hooksmith/runtime";
+import { fromEventBridge } from "@hooksmith/aws/eventbridge";
+import { createProcessor } from "@hooksmith/aws-lambda";
+import { createHandler } from "@hooksmith/aws-lambda/eventbridge";
+import { createRuntime } from "@hooksmith/runtime";
 
 const config: Config = {
   routes: [
@@ -24,15 +22,6 @@ const config: Config = {
 };
 
 const context: Context = { log: console };
-const processEvent = createLambdaHandler(createRuntime(config, context));
+const processor = createProcessor(createRuntime(config, context));
 
-export async function handler(
-  event: EventBridgeEvent,
-): Promise<RunReport> {
-  const report = await processEvent(fromEventBridge(event));
-  if (!report.success) {
-    throw new Error("Hooksmith failed to process the EventBridge event.");
-  }
-
-  return report;
-}
+export const handler = createHandler(fromEventBridge, processor);
