@@ -7,10 +7,12 @@ import {
 } from "@aws-sdk/client-lambda";
 import type { Transformer } from "@hooksmith/pipeline";
 
+/** Minimal Lambda client contract used by the pipeline transformer. */
 export interface LambdaClientLike {
   send(command: InvokeCommand): Promise<InvokeCommandOutput>;
 }
 
+/** Options used to synchronously invoke a Lambda function as a pipeline stage. */
 export interface LambdaTransformerOptions {
   functionName: string;
   name?: string;

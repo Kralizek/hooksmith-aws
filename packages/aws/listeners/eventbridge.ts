@@ -9,10 +9,12 @@ import {
 import { stringifyPayload } from "../shared/payload.ts";
 import { resolve, type ValueOrFactory } from "../shared/value.ts";
 
+/** Minimal EventBridge client contract used for dependency injection. */
 export interface EventBridgeClientLike {
   send(command: PutEventsCommand): Promise<PutEventsCommandOutput>;
 }
 
+/** Options used to publish an EventBridge event from a Hooksmith event. */
 export interface PutEventBridgeEventOptions<TEvent extends Event = Event> {
   eventBusName?: ValueOrFactory<string, TEvent>;
   source?: ValueOrFactory<string, TEvent>;

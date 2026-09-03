@@ -9,10 +9,12 @@ import {
 import { stringifyPayload } from "../shared/payload.ts";
 import { resolve, type ValueOrFactory } from "../shared/value.ts";
 
+/** Minimal SQS client contract used for dependency injection. */
 export interface SqsClientLike {
   send(command: SendMessageCommand): Promise<SendMessageCommandOutput>;
 }
 
+/** Options used to send an SQS message from a Hooksmith event. */
 export interface SendSqsMessageOptions<TEvent extends Event = Event> {
   queueUrl: ValueOrFactory<string, TEvent>;
   body?: ValueOrFactory<unknown, TEvent>;

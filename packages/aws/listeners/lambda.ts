@@ -9,10 +9,12 @@ import {
 import { stringifyPayload } from "../shared/payload.ts";
 import { resolve, type ValueOrFactory } from "../shared/value.ts";
 
+/** Minimal Lambda client contract used for dependency injection. */
 export interface LambdaClientLike {
   send(command: InvokeCommand): Promise<InvokeCommandOutput>;
 }
 
+/** Options used to invoke a Lambda function asynchronously from a Hooksmith event. */
 export interface InvokeLambdaFunctionOptions<TEvent extends Event = Event> {
   functionName: ValueOrFactory<string, TEvent>;
   payload?: ValueOrFactory<unknown, TEvent>;

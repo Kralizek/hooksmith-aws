@@ -1,5 +1,6 @@
 import type { EventDocument } from "@hooksmith/core";
 
+/** AWS EventBridge event shape adapted into a Hooksmith event document. */
 export interface EventBridgeEvent<TDetail = unknown> {
   version: string;
   id: string;
