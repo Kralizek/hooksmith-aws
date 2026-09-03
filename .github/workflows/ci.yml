@@ -26,3 +26,39 @@ jobs:
 
       - name: Validate packages
         run: deno publish --dry-run
+
+  discover-examples:
+    runs-on: ubuntu-latest
+    outputs:
+      examples: ${{ steps.discover.outputs.examples }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Discover isolated examples
+        id: discover
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          examples=$(find examples -type f -name deno.json -printf '%h\n' | sort | jq -R -s -c 'split("\n")[:-1]')
+          echo "examples=$examples" >> "$GITHUB_OUTPUT"
+
+  examples:
+    needs: discover-examples
+    strategy:
+      matrix:
+        example: ${{ fromJSON(needs.discover-examples.outputs.examples) }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+
+      - name: Check ${{ matrix.example }}
+        working-directory: ${{ matrix.example }}
+        run: deno task check
