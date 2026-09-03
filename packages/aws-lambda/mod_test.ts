@@ -51,7 +51,7 @@ Deno.test("createProcessor rejects invalid event documents", async () => {
 });
 
 Deno.test("createHandler returns the raw processor", () => {
-  const processor = async (_document: EventDocument) => reportDocument();
+  const processor = (_document: EventDocument) => Promise.resolve(reportDocument());
   assertEquals(createHandler(processor), processor);
 });
 
