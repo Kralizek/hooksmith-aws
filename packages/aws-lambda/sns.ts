@@ -1,3 +1,4 @@
+import type { RunReport } from "@hooksmith/runtime";
 import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
 export interface Notification {
@@ -28,7 +29,7 @@ export function createHandler<TData = unknown>(
 ): LambdaHandler<LambdaEvent, void> {
   return async (event) => {
     for (const record of event.Records) {
-      let report;
+      let report: RunReport;
       try {
         const document = await read(record.Sns);
         report = await processor(document);

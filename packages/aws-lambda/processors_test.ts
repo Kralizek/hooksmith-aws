@@ -58,6 +58,28 @@ Deno.test("SQS handler exposes record exceptions without changing batch response
   assertEquals(observed[0].record.messageId, "broken");
 });
 
+Deno.test("SQS handler isolates record observer failures", async () => {
+  const handler = sqs.createHandler(
+    () => {
+      throw new Error("bad record");
+    },
+    () => Promise.resolve(report(true)),
+    {
+      onRecordError() {
+        throw new Error("observer failed");
+      },
+    },
+  );
+
+  const result = await handler({
+    Records: [{ messageId: "broken", body: "throw" }],
+  });
+
+  assertEquals(result, {
+    batchItemFailures: [{ itemIdentifier: "broken" }],
+  });
+});
+
 Deno.test("SNS handler processes every notification", async () => {
   const processed: string[] = [];
   const handler = sns.createHandler<string>(

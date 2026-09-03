@@ -45,7 +45,11 @@ export function createHandler<TData = unknown>(
           batchItemFailures.push({ itemIdentifier: record.messageId });
         }
       } catch (error) {
-        await options.onRecordError?.(error, record);
+        try {
+          await options.onRecordError?.(error, record);
+        } catch {
+          // Observability hooks must not change SQS partial-batch semantics.
+        }
         batchItemFailures.push({ itemIdentifier: record.messageId });
       }
     }
