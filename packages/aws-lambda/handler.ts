@@ -1,13 +1,21 @@
 import type { Event, EventDocument } from "@hooksmith/core";
 import { hydrateEvent, type RunReport, type Runtime } from "@hooksmith/runtime";
 
-export type LambdaHandler<TData = unknown> = (
+export type Processor<TData = unknown> = (
   event: EventDocument<TData>,
 ) => Promise<RunReport>;
 
-export function createLambdaHandler<TData = unknown>(
+export type Handler<TData = unknown> = Processor<TData>;
+
+export function createProcessor<TData = unknown>(
   runtime: Runtime<Event<TData>>,
-): LambdaHandler<TData> {
+): Processor<TData> {
   return (document) =>
     Promise.resolve().then(() => runtime.process(hydrateEvent(document)));
+}
+
+export function createHandler<TData = unknown>(
+  processor: Processor<TData>,
+): Handler<TData> {
+  return processor;
 }

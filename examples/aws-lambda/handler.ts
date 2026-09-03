@@ -1,5 +1,5 @@
 import type { Config, Context } from "@hooksmith/core";
-import { createLambdaHandler } from "@hooksmith/aws-lambda";
+import { createHandler, createProcessor } from "@hooksmith/aws-lambda";
 import { createRuntime } from "@hooksmith/runtime";
 
 const config: Config = {
@@ -20,6 +20,6 @@ const config: Config = {
 };
 
 const context: Context = { log: console };
-const runtime = createRuntime(config, context);
+const processor = createProcessor(createRuntime(config, context));
 
-export const handler = createLambdaHandler(runtime);
+export const handler = createHandler(processor);

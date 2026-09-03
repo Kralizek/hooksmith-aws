@@ -1,5 +1,5 @@
 import type { EventDocument } from "@hooksmith/core";
-import type { RunReport } from "@hooksmith/runtime";
+import type { Processor } from "./handler.ts";
 
 export interface Notification {
   Type: string;
@@ -23,22 +23,18 @@ export type RecordReader<TData = unknown> = (
   notification: Notification,
 ) => EventDocument<TData> | Promise<EventDocument<TData>>;
 
-export type EventProcessor<TData = unknown> = (
-  event: EventDocument<TData>,
-) => Promise<RunReport>;
-
 export interface LambdaEvent {
   Records: LambdaRecord[];
 }
 
-export function createProcessor<TData = unknown>(
+export function createHandler<TData = unknown>(
   read: RecordReader<TData>,
-  process: EventProcessor<TData>,
+  processor: Processor<TData>,
 ): (event: LambdaEvent) => Promise<void> {
   return async (event) => {
     for (const record of event.Records) {
       const document = await read(record.Sns);
-      const report = await process(document);
+      const report = await processor(document);
       if (!report.success) {
         throw new Error("Hooksmith failed to process an SNS notification.");
       }

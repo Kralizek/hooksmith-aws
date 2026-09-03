@@ -1,5 +1,5 @@
 import type { EventDocument } from "@hooksmith/core";
-import type { RunReport } from "@hooksmith/runtime";
+import type { Processor } from "./handler.ts";
 
 export interface LambdaRecord {
   messageId: string;
@@ -15,10 +15,6 @@ export type RecordReader<TData = unknown> = (
   record: LambdaRecord,
 ) => EventDocument<TData> | Promise<EventDocument<TData>>;
 
-export type EventProcessor<TData = unknown> = (
-  event: EventDocument<TData>,
-) => Promise<RunReport>;
-
 export interface LambdaEvent {
   Records: LambdaRecord[];
 }
@@ -31,9 +27,9 @@ export interface BatchResponse {
   batchItemFailures: BatchItemFailure[];
 }
 
-export function createProcessor<TData = unknown>(
+export function createHandler<TData = unknown>(
   read: RecordReader<TData>,
-  process: EventProcessor<TData>,
+  processor: Processor<TData>,
 ): (event: LambdaEvent) => Promise<BatchResponse> {
   return async (event) => {
     const batchItemFailures: BatchItemFailure[] = [];
@@ -41,7 +37,7 @@ export function createProcessor<TData = unknown>(
     for (const record of event.Records) {
       try {
         const document = await read(record);
-        const report = await process(document);
+        const report = await processor(document);
         if (!report.success) {
           batchItemFailures.push({ itemIdentifier: record.messageId });
         }

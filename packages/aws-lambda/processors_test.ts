@@ -4,8 +4,8 @@ import type { RunReport } from "@hooksmith/runtime";
 import * as sns from "./sns.ts";
 import * as sqs from "./sqs.ts";
 
-Deno.test("SQS processor returns failed item identifiers", async () => {
-  const processor = sqs.createProcessor<{ fail?: boolean }>(
+Deno.test("SQS handler returns failed item identifiers", async () => {
+  const handler = sqs.createHandler<{ fail?: boolean }>(
     (record) => {
       if (record.body === "throw") {
         throw new Error("bad record");
@@ -15,7 +15,7 @@ Deno.test("SQS processor returns failed item identifiers", async () => {
     (event) => Promise.resolve(report(event.data.fail !== true)),
   );
 
-  const result = await processor({
+  const result = await handler({
     Records: [
       { messageId: "ok", body: "ok" },
       { messageId: "failed", body: "fail" },
@@ -31,9 +31,9 @@ Deno.test("SQS processor returns failed item identifiers", async () => {
   });
 });
 
-Deno.test("SNS processor processes every notification", async () => {
+Deno.test("SNS handler processes every notification", async () => {
   const processed: string[] = [];
-  const processor = sns.createProcessor<string>(
+  const handler = sns.createHandler<string>(
     (notification) => document(notification.Message),
     (event) => {
       processed.push(event.data);
@@ -41,7 +41,7 @@ Deno.test("SNS processor processes every notification", async () => {
     },
   );
 
-  await processor({
+  await handler({
     Records: [
       { Sns: notification("one", "message-1") },
       { Sns: notification("two", "message-2") },
@@ -51,15 +51,15 @@ Deno.test("SNS processor processes every notification", async () => {
   assertEquals(processed, ["one", "two"]);
 });
 
-Deno.test("SNS processor rejects unsuccessful Hooksmith processing", async () => {
-  const processor = sns.createProcessor<string>(
+Deno.test("SNS handler rejects unsuccessful Hooksmith processing", async () => {
+  const handler = sns.createHandler<string>(
     (value) => document(value.Message),
     () => Promise.resolve(report(false)),
   );
 
   await assertRejects(
     () =>
-      processor({
+      handler({
         Records: [{ Sns: notification("failed", "message-1") }],
       }),
     Error,
