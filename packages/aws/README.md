@@ -19,8 +19,8 @@ The package root contains only shared AWS integration types.
 ## Event adapters
 
 AWS envelopes are mapped to Hooksmith event documents. The service payload
-becomes `event.data`, while fields with direct Hooksmith equivalents are promoted
-to the event itself.
+becomes `event.data`, while fields with direct Hooksmith equivalents are
+promoted to the event itself.
 
 For SQS and SNS, sender-defined message attributes are promoted to top-level
 Hooksmith `event.metadata` so application metadata remains easy to consume.

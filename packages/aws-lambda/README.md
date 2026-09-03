@@ -25,9 +25,9 @@ invoked.
 Service-specific Lambda mechanics are exposed through subpaths without coupling
 the package to `@hooksmith/aws`:
 
-- `@hooksmith/aws-lambda/sqs` provides `createProcessor`, `RecordReader`, and the
-  Lambda partial-batch response types. The processor owns record iteration and
-  `batchItemFailures` handling.
+- `@hooksmith/aws-lambda/sqs` provides `createProcessor`, `RecordReader`, and
+  the Lambda partial-batch response types. The processor owns record iteration
+  and `batchItemFailures` handling.
 - `@hooksmith/aws-lambda/sns` provides `createProcessor` and `RecordReader`. The
   processor owns the SNS record loop and fails the invocation when Hooksmith
   processing is unsuccessful.
