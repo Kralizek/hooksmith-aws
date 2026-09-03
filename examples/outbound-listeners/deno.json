@@ -1,12 +1,8 @@
 {
   "imports": {
     "@aws-sdk/client-eventbridge": "npm:@aws-sdk/client-eventbridge@^3.0.0",
-    "@aws-sdk/client-lambda": "npm:@aws-sdk/client-lambda@^3.0.0",
-    "@aws-sdk/client-sns": "npm:@aws-sdk/client-sns@^3.0.0",
     "@aws-sdk/client-sqs": "npm:@aws-sdk/client-sqs@^3.0.0",
     "@hooksmith/aws/eventbridge": "../../packages/aws/eventbridge.ts",
-    "@hooksmith/aws/lambda": "../../packages/aws/lambda.ts",
-    "@hooksmith/aws/sns": "../../packages/aws/sns.ts",
     "@hooksmith/aws/sqs": "../../packages/aws/sqs.ts",
     "@hooksmith/core": "jsr:@hooksmith/core@^0.7.0"
   },
