@@ -38,7 +38,16 @@ export function lambda<TInput, TOutput>(
   return {
     name: options.name ?? `aws-lambda:${options.functionName}`,
     async transform(input): Promise<TOutput> {
-      const serialized = JSON.stringify(input);
+      let serialized: string | undefined;
+      try {
+        serialized = JSON.stringify(input);
+      } catch (error) {
+        throw new TypeError(
+          "Lambda transformer input must be JSON-serializable.",
+          { cause: error },
+        );
+      }
+
       if (serialized === undefined) {
         throw new TypeError(
           "Lambda transformer input must be JSON-serializable.",

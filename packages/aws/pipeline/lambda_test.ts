@@ -71,6 +71,25 @@ Deno.test("lambda JSON-encodes string input", async () => {
   assertEquals(result, "foo");
 });
 
+Deno.test("lambda wraps JSON serialization errors", async () => {
+  const transformer = lambda<bigint, unknown>({
+    functionName: "enrich-order",
+    client: {
+      send(_value: InvokeCommand) {
+        throw new Error("Lambda should not be invoked");
+      },
+    },
+  });
+
+  const error = await assertRejects(
+    () => Promise.resolve(transformer.transform(1n, context)),
+    TypeError,
+    "Lambda transformer input must be JSON-serializable.",
+  );
+
+  assertEquals(error.cause instanceof TypeError, true);
+});
+
 Deno.test("lambda rejects function errors", async () => {
   const transformer = lambda<unknown, unknown>({
     functionName: "enrich-order",
