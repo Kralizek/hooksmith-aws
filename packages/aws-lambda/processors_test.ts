@@ -1,9 +1,18 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import type { EventDocument } from "@hooksmith/core";
+import type { Context, EventDocument } from "@hooksmith/core";
 import type { RunReport } from "@hooksmith/runtime";
 import * as eventbridge from "./eventbridge.ts";
 import * as sns from "./sns.ts";
 import * as sqs from "./sqs.ts";
+
+const context: Context = {
+  log: {
+    debug() {},
+    info() {},
+    warn() {},
+    error() {},
+  },
+};
 
 Deno.test("SQS handler returns failed item identifiers", async () => {
   const handler = sqs.createHandler<{ fail?: boolean }>(
@@ -14,6 +23,7 @@ Deno.test("SQS handler returns failed item identifiers", async () => {
       return document({ fail: record.body === "fail" });
     },
     (event) => Promise.resolve(report(event.data.fail !== true)),
+    context,
   );
 
   const result = await handler({
@@ -32,16 +42,49 @@ Deno.test("SQS handler returns failed item identifiers", async () => {
   });
 });
 
+Deno.test("SQS handler logs record exceptions by default", async () => {
+  const observed: unknown[][] = [];
+  const loggingContext: Context = {
+    log: {
+      debug() {},
+      info() {},
+      warn() {},
+      error(...args) {
+        observed.push(args);
+      },
+    },
+  };
+  const originalError = new Error("bad record");
+  const handler = sqs.createHandler(
+    () => {
+      throw originalError;
+    },
+    () => Promise.resolve(report(true)),
+    loggingContext,
+  );
+
+  await handler({
+    Records: [{ messageId: "broken", body: "throw" }],
+  });
+
+  assertEquals(observed, [["Failed SQS record broken.", originalError]]);
+});
+
 Deno.test("SQS handler exposes record exceptions without changing batch response", async () => {
-  const observed: Array<{ error: unknown; record: sqs.LambdaRecord }> = [];
+  const observed: Array<{
+    error: unknown;
+    record: sqs.LambdaRecord;
+    context: Context;
+  }> = [];
   const handler = sqs.createHandler(
     () => {
       throw new Error("bad record");
     },
     () => Promise.resolve(report(true)),
+    context,
     {
-      onRecordError(error, record) {
-        observed.push({ error, record });
+      onRecordError(error, record, currentContext) {
+        observed.push({ error, record, context: currentContext });
       },
     },
   );
@@ -56,6 +99,7 @@ Deno.test("SQS handler exposes record exceptions without changing batch response
   assertEquals(observed.length, 1);
   assertEquals((observed[0].error as Error).message, "bad record");
   assertEquals(observed[0].record.messageId, "broken");
+  assertEquals(observed[0].context, context);
 });
 
 Deno.test("SQS handler isolates record observer failures", async () => {
@@ -64,6 +108,7 @@ Deno.test("SQS handler isolates record observer failures", async () => {
       throw new Error("bad record");
     },
     () => Promise.resolve(report(true)),
+    context,
     {
       onRecordError() {
         throw new Error("observer failed");

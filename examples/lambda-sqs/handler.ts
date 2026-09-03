@@ -24,4 +24,4 @@ const config: Config = {
 const context: Context = { log: console };
 const processor = createProcessor(createRuntime(config, context));
 
-export const handler = createHandler(fromSqs, processor);
+export const handler = createHandler(fromSqs, processor, context);
