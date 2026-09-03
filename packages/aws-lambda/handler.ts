@@ -8,5 +8,6 @@ export type LambdaHandler<TData = unknown> = (
 export function createLambdaHandler<TData = unknown>(
   runtime: Runtime<Event<TData>>,
 ): LambdaHandler<TData> {
-  return async (document) => await runtime.process(hydrateEvent(document));
+  return (document) =>
+    Promise.resolve().then(() => runtime.process(hydrateEvent(document)));
 }
