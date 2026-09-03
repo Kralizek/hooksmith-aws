@@ -32,9 +32,9 @@ the package to `@hooksmith/aws`:
 - `@hooksmith/aws-lambda/sns` provides `createHandler` and `RecordReader`. The
   handler owns the SNS record loop and fails the invocation when Hooksmith
   processing is unsuccessful.
-- `@hooksmith/aws-lambda/eventbridge` provides `createHandler` and `EventReader`.
-  The handler adapts one EventBridge event and fails the invocation when
-  Hooksmith processing is unsuccessful.
+- `@hooksmith/aws-lambda/eventbridge` provides `createHandler` and
+  `EventReader`. The handler adapts one EventBridge event and fails the
+  invocation when Hooksmith processing is unsuccessful.
 
 Consumers supply the reader, typically `fromSqs`, `fromSns`, or
 `fromEventBridge` from `@hooksmith/aws`, plus the common processor:
