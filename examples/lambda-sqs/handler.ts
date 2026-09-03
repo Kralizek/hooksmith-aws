@@ -24,7 +24,4 @@ const config: Config = {
 const context: Context = { log: console };
 const process = createLambdaHandler(createRuntime(config, context));
 
-export const handler = createProcessor({
-  read: fromSqs,
-  process,
-});
+export const handler = createProcessor(fromSqs, process);

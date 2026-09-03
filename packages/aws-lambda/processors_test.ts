@@ -10,17 +10,15 @@ interface TestRecord {
 }
 
 Deno.test("SQS processor returns failed item identifiers", async () => {
-  const processor = sqs.createProcessor<TestRecord, { fail?: boolean }>({
-    read(record) {
+  const processor = sqs.createProcessor<TestRecord, { fail?: boolean }>(
+    (record) => {
       if (record.body === "throw") {
         throw new Error("bad record");
       }
       return document({ fail: record.body === "fail" });
     },
-    process(event) {
-      return Promise.resolve(report(event.data.fail !== true));
-    },
-  });
+    (event) => Promise.resolve(report(event.data.fail !== true)),
+  );
 
   const result = await processor({
     Records: [
@@ -40,15 +38,13 @@ Deno.test("SQS processor returns failed item identifiers", async () => {
 
 Deno.test("SNS processor processes every notification", async () => {
   const processed: string[] = [];
-  const processor = sns.createProcessor<string, string>({
-    read(value) {
-      return document(value);
-    },
-    process(event) {
+  const processor = sns.createProcessor<string, string>(
+    (value) => document(value),
+    (event) => {
       processed.push(event.data);
       return Promise.resolve(report(true));
     },
-  });
+  );
 
   await processor({
     Records: [{ Sns: "one" }, { Sns: "two" }],
@@ -58,14 +54,10 @@ Deno.test("SNS processor processes every notification", async () => {
 });
 
 Deno.test("SNS processor rejects unsuccessful Hooksmith processing", async () => {
-  const processor = sns.createProcessor<string, string>({
-    read(value) {
-      return document(value);
-    },
-    process() {
-      return Promise.resolve(report(false));
-    },
-  });
+  const processor = sns.createProcessor<string, string>(
+    (value) => document(value),
+    () => Promise.resolve(report(false)),
+  );
 
   await assertRejects(
     () => processor({ Records: [{ Sns: "failed" }] }),
