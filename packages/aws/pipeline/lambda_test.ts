@@ -130,6 +130,26 @@ Deno.test("lambda rejects missing response payloads", async () => {
   );
 });
 
+Deno.test("lambda rejects empty response payloads", async () => {
+  const transformer = lambda<unknown, unknown>({
+    functionName: "enrich-order",
+    client: {
+      send(_value: InvokeCommand) {
+        return response({
+          StatusCode: 200,
+          Payload: payload(""),
+        });
+      },
+    },
+  });
+
+  await assertRejects(
+    () => Promise.resolve(transformer.transform({}, context)),
+    Error,
+    "Lambda enrich-order returned no payload.",
+  );
+});
+
 Deno.test("lambda rejects invalid JSON response payloads", async () => {
   const transformer = lambda<unknown, unknown>({
     functionName: "enrich-order",
