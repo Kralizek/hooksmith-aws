@@ -1,6 +1,7 @@
 import type { Context } from "@hooksmith/core";
 import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
+/** One SQS message record delivered to an AWS Lambda handler. */
 export interface LambdaRecord {
   messageId: string;
   body: string;
@@ -11,18 +12,22 @@ export interface LambdaRecord {
   awsRegion?: string;
 }
 
+/** AWS Lambda SQS event containing one or more message records. */
 export interface LambdaEvent {
   Records: LambdaRecord[];
 }
 
+/** SQS record identifier reported as a partial-batch failure. */
 export interface BatchItemFailure {
   itemIdentifier: string;
 }
 
+/** Partial-batch response returned by an SQS Lambda handler. */
 export interface BatchResponse {
   batchItemFailures: BatchItemFailure[];
 }
 
+/** Optional hooks controlling SQS record error handling. */
 export interface HandlerOptions {
   onRecordError?: (
     error: unknown,
