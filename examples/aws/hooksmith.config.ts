@@ -1,10 +1,8 @@
 import type { Config } from "@hooksmith/core";
-import {
-  invokeLambdaFunction,
-  publishSnsMessage,
-  putEventBridgeEvent,
-  sendSqsMessage,
-} from "@hooksmith/aws";
+import { putEventBridgeEvent } from "@hooksmith/aws/eventbridge";
+import { invokeLambdaFunction } from "@hooksmith/aws/lambda";
+import { publishSnsMessage } from "@hooksmith/aws/sns";
+import { sendSqsMessage } from "@hooksmith/aws/sqs";
 
 export default {
   routes: [
