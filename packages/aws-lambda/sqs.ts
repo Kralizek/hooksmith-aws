@@ -1,3 +1,4 @@
+import type { Context } from "@hooksmith/core";
 import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
 export interface LambdaRecord {
@@ -26,14 +27,18 @@ export interface HandlerOptions {
   onRecordError?: (
     error: unknown,
     record: LambdaRecord,
+    context: Context,
   ) => void | Promise<void>;
 }
 
 export function createHandler<TData = unknown>(
   read: EventReader<LambdaRecord, TData>,
   processor: EventProcessor<TData>,
+  context: Context,
   options: HandlerOptions = {},
 ): LambdaHandler<LambdaEvent, BatchResponse> {
+  const onRecordError = options.onRecordError ?? defaultErrorLogger;
+
   return async (event) => {
     const batchItemFailures: BatchItemFailure[] = [];
 
@@ -46,7 +51,7 @@ export function createHandler<TData = unknown>(
         }
       } catch (error) {
         try {
-          await options.onRecordError?.(error, record);
+          await onRecordError(error, record, context);
         } catch {
           // Observability hooks must not change SQS partial-batch semantics.
         }
@@ -56,4 +61,12 @@ export function createHandler<TData = unknown>(
 
     return { batchItemFailures };
   };
+}
+
+function defaultErrorLogger(
+  error: unknown,
+  record: LambdaRecord,
+  context: Context,
+): void {
+  context.log.error(`Failed SQS record ${record.messageId}.`, error);
 }
