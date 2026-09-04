@@ -3,10 +3,11 @@
 AWS Lambda hosting support for running Hooksmith event processing in Lambda
 functions.
 
-The package root exposes the common Hooksmith processor plus the raw Lambda
-handler. `createProcessor(runtime)` always turns a Hooksmith runtime into an
-`EventDocument` processor. `createHandler(processor)` is the raw Lambda handler
-for invocations whose payload is already a Hooksmith `EventDocument`.
+The package root exposes the common Hooksmith processor, the raw Lambda handler,
+and Lambda-host enrichment. `createProcessor(runtime)` always turns a Hooksmith
+runtime into an `EventDocument` processor. `createHandler(processor)` is the raw
+Lambda handler for invocations whose payload is already a Hooksmith
+`EventDocument`.
 
 ```ts
 import { createHandler, createProcessor } from "@hooksmith/aws-lambda";
@@ -20,6 +21,43 @@ export const handler = createHandler(processor);
 The processor hydrates the event document and returns the Hooksmith `RunReport`
 produced by `runtime.process()`. Invalid event documents fail during hydration
 before the runtime is invoked.
+
+## Lambda environment enrichment
+
+`lambdaEnvironmentEnrichment()` adds execution-environment metadata before
+routing. By default it writes under `metadata.aws`:
+
+```ts
+import { lambdaEnvironmentEnrichment } from "@hooksmith/aws-lambda";
+
+export default {
+  enrichers: [lambdaEnvironmentEnrichment()],
+  routes: [
+    // conditions can inspect the enriched metadata
+  ],
+};
+```
+
+The default enrichment includes the AWS region plus Lambda function name,
+version, memory size, execution environment, log group/stream, and X-Ray trace
+header when those environment variables are available.
+
+Use `map` when a different metadata shape is preferred:
+
+```ts
+lambdaEnvironmentEnrichment({
+  map: (_event, environment) => ({
+    metadata: {
+      region: environment.region,
+      functionName: environment.functionName,
+    },
+  }),
+});
+```
+
+This enricher only uses information available to the current Lambda execution
+environment. AWS service lookups such as STS caller identity or invoking another
+Lambda for enrichment live in `@hooksmith/aws` instead.
 
 ## Function contracts
 
