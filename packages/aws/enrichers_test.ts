@@ -106,7 +106,7 @@ Deno.test("getParameterEnrichment resolves request values and maps the response"
   });
 });
 
-Deno.test("getCallerIdentityEnrichment maps STS identity", async () => {
+Deno.test("getCallerIdentityEnrichment uses the standard STS metadata shape", async () => {
   const enricher = getCallerIdentityEnrichment({
     client: {
       send(command: GetCallerIdentityCommand) {
@@ -119,20 +119,15 @@ Deno.test("getCallerIdentityEnrichment maps STS identity", async () => {
         });
       },
     },
-    map: (_event, response) => ({
-      metadata: {
-        awsAccount: response.Account,
-        awsArn: response.Arn,
-        awsUserId: response.UserId,
-      },
-    }),
   });
 
   assertEquals(await enricher.enrich(event, context), {
     metadata: {
-      awsAccount: "123456789012",
-      awsArn: "arn:aws:iam::123456789012:user/example",
-      awsUserId: "AIDAEXAMPLE",
+      sts: {
+        account: "123456789012",
+        arn: "arn:aws:iam::123456789012:user/example",
+        userId: "AIDAEXAMPLE",
+      },
     },
   });
 });
