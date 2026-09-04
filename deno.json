@@ -8,6 +8,8 @@
     "@aws-sdk/client-lambda": "npm:@aws-sdk/client-lambda@^3.0.0",
     "@aws-sdk/client-sns": "npm:@aws-sdk/client-sns@^3.0.0",
     "@aws-sdk/client-sqs": "npm:@aws-sdk/client-sqs@^3.0.0",
+    "@aws-sdk/client-ssm": "npm:@aws-sdk/client-ssm@^3.0.0",
+    "@aws-sdk/client-sts": "npm:@aws-sdk/client-sts@^3.0.0",
     "@hooksmith/core": "jsr:@hooksmith/core@^0.9.0",
     "@hooksmith/pipeline": "jsr:@hooksmith/pipeline@^0.9.0",
     "@hooksmith/runtime": "jsr:@hooksmith/runtime@^0.9.0",
