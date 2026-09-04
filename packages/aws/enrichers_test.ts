@@ -1,6 +1,9 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { Context, Event } from "@hooksmith/core";
-import type { InvokeCommand, InvokeCommandOutput } from "@aws-sdk/client-lambda";
+import type {
+  InvokeCommand,
+  InvokeCommandOutput,
+} from "@aws-sdk/client-lambda";
 import type { GetParameterCommand } from "@aws-sdk/client-ssm";
 import type { GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { invokeLambdaEnrichment } from "./lambda.ts";
