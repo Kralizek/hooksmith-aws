@@ -70,10 +70,13 @@ export function invokeLambdaEnrichment<
           }.`,
         );
       }
+      if (response.Payload === undefined) {
+        throw new Error(
+          `Lambda ${functionName} synchronous invocation returned no payload.`,
+        );
+      }
 
-      const decoded = response.Payload === undefined
-        ? undefined
-        : parsePayload(decoder.decode(response.Payload));
+      const decoded = parsePayload(decoder.decode(response.Payload));
 
       return await options.map(
         event,
