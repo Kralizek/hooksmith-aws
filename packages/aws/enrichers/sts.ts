@@ -22,14 +22,14 @@ export interface GetCallerIdentityEnrichmentOptions<
 > {
   name?: string;
   input?: ValueOrFactory<GetCallerIdentityCommandInput, TEvent>;
-  map: AwsEnrichmentMap<TEvent, GetCallerIdentityCommandOutput>;
+  map?: AwsEnrichmentMap<TEvent, GetCallerIdentityCommandOutput>;
   client?: STSClientLike;
   clientConfig?: STSClientConfig;
 }
 
 /** Resolves the current AWS caller identity and maps it to event enrichment. */
 export function getCallerIdentityEnrichment<TEvent extends Event = Event>(
-  options: GetCallerIdentityEnrichmentOptions<TEvent>,
+  options: GetCallerIdentityEnrichmentOptions<TEvent> = {},
 ): EventEnricher<TEvent> {
   const client = options.client ?? new STSClient(options.clientConfig ?? {});
 
@@ -40,7 +40,20 @@ export function getCallerIdentityEnrichment<TEvent extends Event = Event>(
         ? {}
         : await resolve(options.input, event, context);
       const response = await client.send(new GetCallerIdentityCommand(input));
-      return await options.map(event, response, context);
+
+      if (options.map !== undefined) {
+        return await options.map(event, response, context);
+      }
+
+      return {
+        metadata: {
+          sts: {
+            account: response.Account,
+            arn: response.Arn,
+            userId: response.UserId,
+          },
+        },
+      };
     },
   };
 }
