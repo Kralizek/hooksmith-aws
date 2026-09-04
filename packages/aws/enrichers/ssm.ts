@@ -53,7 +53,9 @@ export function getParameterEnrichment<TEvent extends Event = Event>(
         new GetParameterCommand({
           ...nativeInput,
           Name: parameterName,
-          ...(withDecryption === undefined ? {} : { WithDecryption: withDecryption }),
+          ...(withDecryption === undefined
+            ? {}
+            : { WithDecryption: withDecryption }),
         }),
       );
 
