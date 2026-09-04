@@ -55,6 +55,30 @@ Deno.test("lambdaEnvironmentEnrichment exposes Lambda environment metadata", asy
   }
 });
 
+Deno.test("lambdaEnvironmentEnrichment refreshes invocation-scoped environment", async () => {
+  const previousTrace = Deno.env.get("_X_AMZN_TRACE_ID");
+
+  try {
+    const enricher = lambdaEnvironmentEnrichment({
+      map: (_event, environment) => ({
+        metadata: { trace: environment.xrayTraceHeader },
+      }),
+    });
+
+    Deno.env.set("_X_AMZN_TRACE_ID", "Root=first");
+    assertEquals(await enricher.enrich(event, context), {
+      metadata: { trace: "Root=first" },
+    });
+
+    Deno.env.set("_X_AMZN_TRACE_ID", "Root=second");
+    assertEquals(await enricher.enrich(event, context), {
+      metadata: { trace: "Root=second" },
+    });
+  } finally {
+    restore("_X_AMZN_TRACE_ID", previousTrace);
+  }
+});
+
 Deno.test("lambdaEnvironmentEnrichment supports custom mapping", async () => {
   const previousRegion = Deno.env.get("AWS_REGION");
   Deno.env.set("AWS_REGION", "eu-north-1");
