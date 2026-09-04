@@ -65,7 +65,9 @@ export function invokeLambdaEnrichment<
       }
       if (response.StatusCode !== 200) {
         throw new Error(
-          `Lambda ${functionName} synchronous invocation returned status ${response.StatusCode ?? "unknown"}.`,
+          `Lambda ${functionName} synchronous invocation returned status ${
+            response.StatusCode ?? "unknown"
+          }.`,
         );
       }
 
