@@ -5,8 +5,8 @@ sending the same event to two AWS services: SQS and EventBridge.
 
 The configuration runs two enrichers before routing:
 
-- `getCallerIdentityEnrichment()` calls STS and adds the standard caller identity
-  under `metadata.sts`.
+- `getCallerIdentityEnrichment()` calls STS and adds the standard caller
+  identity under `metadata.sts`.
 - `getParameterEnrichment()` reads an SSM parameter and maps its value to
   `metadata.tenantPlan`.
 
