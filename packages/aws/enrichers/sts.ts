@@ -11,7 +11,9 @@ import { resolve, type ValueOrFactory } from "../shared/value.ts";
 
 /** Minimal STS client contract used for dependency injection. */
 export interface STSClientLike {
-  send(command: GetCallerIdentityCommand): Promise<GetCallerIdentityCommandOutput>;
+  send(
+    command: GetCallerIdentityCommand,
+  ): Promise<GetCallerIdentityCommandOutput>;
 }
 
 /** Options used to resolve STS caller identity and map it to event enrichment. */
