@@ -1,7 +1,7 @@
 # @hooksmith/aws
 
-AWS integrations for Hooksmith, with event adapters and listeners for AWS
-services.
+AWS integrations for Hooksmith, with event adapters, enrichers, and listeners
+for AWS services.
 
 This package does not host the Hooksmith runtime. Lambda hosting support lives
 in [`@hooksmith/aws-lambda`](../aws-lambda).
@@ -13,6 +13,8 @@ dependencies they actually use:
 - `@hooksmith/aws/sns`
 - `@hooksmith/aws/eventbridge`
 - `@hooksmith/aws/lambda`
+- `@hooksmith/aws/ssm`
+- `@hooksmith/aws/sts`
 - `@hooksmith/aws/pipeline/lambda`
 
 The package root contains only shared AWS integration types.
@@ -54,6 +56,43 @@ const snsEvent = fromSnsRaw(rawPayload);
 The raw adapters validate the basic Hooksmith event-document shape instead of
 inventing event metadata from an envelope that is no longer present.
 
+## Enrichers
+
+AWS service enrichers perform an AWS request before routing and map the service
+response to `EventEnrichment`:
+
+- `invokeLambdaEnrichment` from `@hooksmith/aws/lambda`
+- `getParameterEnrichment` from `@hooksmith/aws/ssm`
+- `getCallerIdentityEnrichment` from `@hooksmith/aws/sts`
+
+The mapper is intentionally required because native AWS SDK responses are not
+Hooksmith enrichment documents by themselves.
+
+```ts
+import { getCallerIdentityEnrichment } from "@hooksmith/aws/sts";
+
+const identity = getCallerIdentityEnrichment({
+  map: (_event, response) => ({
+    metadata: {
+      awsAccount: response.Account,
+      awsArn: response.Arn,
+      awsUserId: response.UserId,
+    },
+  }),
+});
+```
+
+Synchronous Lambda enrichment uses `InvocationType: "RequestResponse"`, parses
+the returned payload as JSON when possible, and fails on Lambda function errors
+or non-200 invocation status codes.
+
+All AWS enrichers support the same client customization pattern as listeners:
+use `clientConfig` for normal SDK configuration or inject a compatible `client`
+for tests, custom credentials, LocalStack, or another endpoint.
+
+DynamoDB enrichment is intentionally not included yet; its client shape remains
+an explicit design decision.
+
 ## Listeners
 
 The package provides listeners for common event-oriented AWS services:
@@ -75,8 +114,8 @@ const listener = sendSqsMessage({
 ```
 
 Lambda invocation listeners are asynchronous sinks. They always use AWS
-`InvocationType: "Event"`; synchronous request/response invocation is outside
-the listener abstraction.
+`InvocationType: "Event"`; synchronous request/response invocation belongs to
+the enrichment or pipeline transformation abstractions.
 
 Each listener exposes relevant native AWS SDK input fields through `input` (or
 `entry` for EventBridge). Explicit Hooksmith-friendly options and fixed listener
