@@ -1,4 +1,9 @@
-import type { Context, Event, EventEnricher, EventEnrichment } from "@hooksmith/core";
+import type {
+  Context,
+  Event,
+  EventEnricher,
+  EventEnrichment,
+} from "@hooksmith/core";
 
 /** AWS Lambda execution-environment values exposed to enrichment mapping. */
 export interface LambdaEnvironment {
@@ -66,7 +71,9 @@ function readLambdaEnvironment(): LambdaEnvironment {
     executionEnvironment: Deno.env.get("AWS_EXECUTION_ENV"),
     functionName: Deno.env.get("AWS_LAMBDA_FUNCTION_NAME"),
     functionVersion: Deno.env.get("AWS_LAMBDA_FUNCTION_VERSION"),
-    functionMemorySize: parseNumber(Deno.env.get("AWS_LAMBDA_FUNCTION_MEMORY_SIZE")),
+    functionMemorySize: parseNumber(
+      Deno.env.get("AWS_LAMBDA_FUNCTION_MEMORY_SIZE"),
+    ),
     logGroupName: Deno.env.get("AWS_LAMBDA_LOG_GROUP_NAME"),
     logStreamName: Deno.env.get("AWS_LAMBDA_LOG_STREAM_NAME"),
     xrayTraceHeader: Deno.env.get("_X_AMZN_TRACE_ID"),
