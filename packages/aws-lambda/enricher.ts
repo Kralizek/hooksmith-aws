@@ -36,11 +36,11 @@ export interface LambdaEnvironmentEnrichmentOptions<
 export function lambdaEnvironmentEnrichment<TEvent extends Event = Event>(
   options: LambdaEnvironmentEnrichmentOptions<TEvent> = {},
 ): EventEnricher<TEvent> {
-  const environment = readLambdaEnvironment();
-
   return {
     name: options.name ?? "aws-lambda-environment-enrichment",
     async enrich(event, context) {
+      const environment = readLambdaEnvironment();
+
       if (options.map !== undefined) {
         return await options.map(event, environment, context);
       }
