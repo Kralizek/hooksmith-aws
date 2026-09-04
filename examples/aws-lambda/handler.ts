@@ -1,8 +1,15 @@
 import type { Config, Context } from "@hooksmith/core";
-import { createHandler, createProcessor } from "@hooksmith/aws-lambda";
+import {
+  createHandler,
+  createProcessor,
+  lambdaEnvironmentEnrichment,
+} from "@hooksmith/aws-lambda";
 import { createRuntime } from "@hooksmith/runtime";
 
 const config: Config = {
+  enrichers: [
+    lambdaEnvironmentEnrichment(),
+  ],
   routes: [
     {
       name: "log-event",

@@ -7,4 +7,5 @@
  * @module
  */
 
+export type { AwsEnrichmentMap } from "./shared/enrichment.ts";
 export type { ValueOrFactory } from "./shared/value.ts";
