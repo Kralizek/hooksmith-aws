@@ -1,3 +1,9 @@
+/**
+ * AWS Lambda pipeline integrations for Hooksmith.
+ *
+ * @module
+ */
+
 import {
   InvokeCommand,
   type InvokeCommandInput,

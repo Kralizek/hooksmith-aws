@@ -1,3 +1,9 @@
+/**
+ * AWS Lambda hosting support for Amazon SQS events.
+ *
+ * @module
+ */
+
 import type { Context } from "@hooksmith/core";
 import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 

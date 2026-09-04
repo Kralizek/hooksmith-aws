@@ -1,3 +1,9 @@
+/**
+ * AWS Lambda hosting support for Amazon SNS events.
+ *
+ * @module
+ */
+
 import type { RunReport } from "@hooksmith/runtime";
 import type { EventProcessor, EventReader, LambdaHandler } from "./types.ts";
 
