@@ -4,4 +4,5 @@
  * @module
  */
 
+export * from "./enrichers/lambda.ts";
 export * from "./listeners/lambda.ts";
