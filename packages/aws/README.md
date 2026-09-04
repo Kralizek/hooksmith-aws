@@ -58,29 +58,36 @@ inventing event metadata from an envelope that is no longer present.
 
 ## Enrichers
 
-AWS service enrichers perform an AWS request before routing and map the service
-response to `EventEnrichment`:
+AWS service enrichers perform an AWS request before routing and produce an
+`EventEnrichment`:
 
 - `invokeLambdaEnrichment` from `@hooksmith/aws/lambda`
 - `getParameterEnrichment` from `@hooksmith/aws/ssm`
 - `getCallerIdentityEnrichment` from `@hooksmith/aws/sts`
 
-The mapper is intentionally required because native AWS SDK responses are not
-Hooksmith enrichment documents by themselves.
+Lambda and SSM require an explicit mapper because their native AWS SDK responses
+do not have one obvious Hooksmith metadata shape. STS caller identity has a
+standard default and stores its fields under `metadata.sts`:
 
 ```ts
 import { getCallerIdentityEnrichment } from "@hooksmith/aws/sts";
 
-const identity = getCallerIdentityEnrichment({
-  map: (_event, response) => ({
-    metadata: {
-      awsAccount: response.Account,
-      awsArn: response.Arn,
-      awsUserId: response.UserId,
-    },
-  }),
-});
+const identity = getCallerIdentityEnrichment();
 ```
+
+This produces metadata shaped like:
+
+```ts
+{
+  sts: {
+    account: "123456789012",
+    arn: "arn:aws:iam::123456789012:user/example",
+    userId: "AIDAEXAMPLE",
+  },
+}
+```
+
+Supply `map` when a different STS projection is needed.
 
 Synchronous Lambda enrichment uses `InvocationType: "RequestResponse"`, parses
 the returned payload as JSON when possible, and fails on Lambda function errors
