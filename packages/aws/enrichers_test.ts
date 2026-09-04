@@ -82,6 +82,48 @@ Deno.test("invokeLambdaEnrichment rejects Lambda function errors", async () => {
   );
 });
 
+Deno.test("invokeLambdaEnrichment rejects non-200 status codes", async () => {
+  const enricher = invokeLambdaEnrichment({
+    functionName: "unavailable-function",
+    client: {
+      send() {
+        return Promise.resolve({
+          $metadata: {},
+          StatusCode: 500,
+        });
+      },
+    },
+    map: () => ({ metadata: {} }),
+  });
+
+  await assertRejects(
+    async () => await enricher.enrich(event, context),
+    Error,
+    "Lambda unavailable-function synchronous invocation returned status 500.",
+  );
+});
+
+Deno.test("invokeLambdaEnrichment rejects missing response payloads", async () => {
+  const enricher = invokeLambdaEnrichment({
+    functionName: "empty-function",
+    client: {
+      send() {
+        return Promise.resolve({
+          $metadata: {},
+          StatusCode: 200,
+        });
+      },
+    },
+    map: () => ({ metadata: {} }),
+  });
+
+  await assertRejects(
+    async () => await enricher.enrich(event, context),
+    Error,
+    "Lambda empty-function synchronous invocation returned no payload.",
+  );
+});
+
 Deno.test("getParameterEnrichment resolves request values and maps the response", async () => {
   const enricher = getParameterEnrichment<Event<{ tenantId: string }>>({
     parameterName: ({ data }) => `/tenants/${data.tenantId}/plan`,
