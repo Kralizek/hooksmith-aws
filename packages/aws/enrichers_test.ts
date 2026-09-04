@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { Context, Event } from "@hooksmith/core";
-import type { InvokeCommand } from "@aws-sdk/client-lambda";
+import type { InvokeCommand, InvokeCommandOutput } from "@aws-sdk/client-lambda";
 import type { GetParameterCommand } from "@aws-sdk/client-ssm";
 import type { GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { invokeLambdaEnrichment } from "./lambda.ts";
@@ -29,20 +29,22 @@ Deno.test("invokeLambdaEnrichment invokes synchronously and maps the payload", a
     { plan: string }
   >({
     functionName: "resolve-tenant",
-    payload: ({ data }) => ({ tenantId: data.tenantId }),
+    payload: (currentEvent: Event<{ tenantId: string }>) => ({
+      tenantId: currentEvent.data.tenantId,
+    }),
     client: {
       send(command: InvokeCommand) {
         assertEquals(command.input.FunctionName, "resolve-tenant");
         assertEquals(command.input.InvocationType, "RequestResponse");
         assertEquals(
-          new TextDecoder().decode(command.input.Payload),
+          new TextDecoder().decode(command.input.Payload as Uint8Array),
           JSON.stringify({ tenantId: "tenant-42" }),
         );
         return Promise.resolve({
           $metadata: {},
           StatusCode: 200,
           Payload: new TextEncoder().encode(JSON.stringify({ plan: "pro" })),
-        });
+        } as InvokeCommandOutput);
       },
     },
     map: (_event, response) => ({
@@ -71,7 +73,7 @@ Deno.test("invokeLambdaEnrichment rejects Lambda function errors", async () => {
   });
 
   await assertRejects(
-    () => enricher.enrich(event, context),
+    async () => await enricher.enrich(event, context),
     Error,
     "Lambda broken-function returned a function error: Unhandled.",
   );
