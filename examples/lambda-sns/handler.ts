@@ -2,7 +2,11 @@ import type { Config, Context } from "@hooksmith/core";
 import { fromSns } from "@hooksmith/aws/sns";
 import { createProcessor } from "@hooksmith/aws-lambda";
 import { createHandler } from "@hooksmith/aws-lambda/sns";
-import { createRuntime } from "@hooksmith/runtime";
+import {
+  createConsoleLogWriter,
+  createLoggerFactory,
+  createRuntime,
+} from "@hooksmith/runtime";
 
 const config: Config = {
   routes: [
@@ -21,7 +25,9 @@ const config: Config = {
   ],
 };
 
-const context: Context = { log: console };
+const context: Context = {
+  logger: createLoggerFactory({ write: createConsoleLogWriter() }),
+};
 const processor = createProcessor(createRuntime(config, context));
 
 export const handler = createHandler(fromSns, processor);
