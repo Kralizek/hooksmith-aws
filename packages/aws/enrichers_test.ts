@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { Context, Event } from "@hooksmith/core";
+import { nullLoggerFactory } from "@hooksmith/runtime";
 import type {
   InvokeCommand,
   InvokeCommandOutput,
@@ -11,12 +12,7 @@ import { getParameterEnrichment } from "./ssm.ts";
 import { getCallerIdentityEnrichment } from "./sts.ts";
 
 const context: Context = {
-  log: {
-    debug() {},
-    info() {},
-    warn() {},
-    error() {},
-  },
+  logger: nullLoggerFactory,
 };
 
 const event: Event<{ tenantId: string }> = {
