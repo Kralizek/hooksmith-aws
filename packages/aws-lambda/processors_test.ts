@@ -1,17 +1,12 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { Context, EventDocument } from "@hooksmith/core";
-import type { RunReport } from "@hooksmith/runtime";
+import { nullLoggerFactory, type RunReport } from "@hooksmith/runtime";
 import * as eventbridge from "./eventbridge.ts";
 import * as sns from "./sns.ts";
 import * as sqs from "./sqs.ts";
 
 const context: Context = {
-  log: {
-    debug() {},
-    info() {},
-    warn() {},
-    error() {},
-  },
+  logger: nullLoggerFactory,
 };
 
 Deno.test("SQS handler returns failed item identifiers", async () => {
@@ -45,12 +40,17 @@ Deno.test("SQS handler returns failed item identifiers", async () => {
 Deno.test("SQS handler logs record exceptions by default", async () => {
   const observed: unknown[][] = [];
   const loggingContext: Context = {
-    log: {
-      debug() {},
-      info() {},
-      warn() {},
-      error(...args) {
-        observed.push(args);
+    logger: {
+      getLogger(source) {
+        return {
+          trace() {},
+          debug() {},
+          info() {},
+          warn() {},
+          error(template, properties, error) {
+            observed.push([source, template, properties, error]);
+          },
+        };
       },
     },
   };
@@ -67,7 +67,12 @@ Deno.test("SQS handler logs record exceptions by default", async () => {
     Records: [{ messageId: "broken", body: "throw" }],
   });
 
-  assertEquals(observed, [["Failed SQS record broken.", originalError]]);
+  assertEquals(observed, [[
+    "SQSHandler",
+    "Failed SQS record {messageId}.",
+    { messageId: "broken" },
+    originalError,
+  ]]);
 });
 
 Deno.test("SQS handler exposes record exceptions without changing batch response", async () => {

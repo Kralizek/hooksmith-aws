@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { Context, Event } from "@hooksmith/core";
+import { nullLoggerFactory } from "@hooksmith/runtime";
 import type {
   PutEventsCommand,
   PutEventsCommandOutput,
@@ -26,12 +27,7 @@ const event: Event<{ orderId: string }> = {
 };
 
 const context: Context = {
-  log: {
-    debug() {},
-    info() {},
-    warn() {},
-    error() {},
-  },
+  logger: nullLoggerFactory,
 };
 
 Deno.test("sendSqsMessage sends event data by default", async () => {

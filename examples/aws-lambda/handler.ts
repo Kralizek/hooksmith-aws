@@ -4,7 +4,11 @@ import {
   createProcessor,
   lambdaEnvironmentEnrichment,
 } from "@hooksmith/aws-lambda";
-import { createRuntime } from "@hooksmith/runtime";
+import {
+  createConsoleLogWriter,
+  createLoggerFactory,
+  createRuntime,
+} from "@hooksmith/runtime";
 
 const config: Config = {
   enrichers: [
@@ -26,7 +30,9 @@ const config: Config = {
   ],
 };
 
-const context: Context = { log: console };
+const context: Context = {
+  logger: createLoggerFactory({ write: createConsoleLogWriter() }),
+};
 const processor = createProcessor(createRuntime(config, context));
 
 export const handler = createHandler(processor);

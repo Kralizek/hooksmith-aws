@@ -79,5 +79,9 @@ function defaultErrorLogger(
   record: LambdaRecord,
   context: Context,
 ): void {
-  context.log.error(`Failed SQS record ${record.messageId}.`, error);
+  context.logger.getLogger("SQSHandler").error(
+    "Failed SQS record {messageId}.",
+    { messageId: record.messageId },
+    error,
+  );
 }

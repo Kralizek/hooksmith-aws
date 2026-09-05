@@ -1,14 +1,10 @@
 import { assertEquals } from "@std/assert";
 import type { Context, Event } from "@hooksmith/core";
+import { nullLoggerFactory } from "@hooksmith/runtime";
 import { lambdaEnvironmentEnrichment } from "./enricher.ts";
 
 const context: Context = {
-  log: {
-    debug() {},
-    info() {},
-    warn() {},
-    error() {},
-  },
+  logger: nullLoggerFactory,
 };
 
 const event: Event = {

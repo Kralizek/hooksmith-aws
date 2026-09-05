@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { TransformContext } from "@hooksmith/pipeline";
+import { nullLoggerFactory } from "@hooksmith/runtime";
 import type {
   InvokeCommand,
   InvokeCommandOutput,
@@ -8,12 +9,7 @@ import { lambda } from "./lambda.ts";
 
 const context: TransformContext = {
   originalData: { orderId: "42" },
-  log: {
-    debug() {},
-    info() {},
-    warn() {},
-    error() {},
-  },
+  logger: nullLoggerFactory,
 };
 
 Deno.test("lambda transforms input through synchronous invocation", async () => {
