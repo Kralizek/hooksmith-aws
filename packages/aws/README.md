@@ -11,6 +11,7 @@ dependencies they actually use:
 
 - `@hooksmith/aws/sqs`
 - `@hooksmith/aws/sns`
+- `@hooksmith/aws/sns/http`
 - `@hooksmith/aws/eventbridge`
 - `@hooksmith/aws/lambda`
 - `@hooksmith/aws/ssm`
@@ -44,10 +45,12 @@ const eventBridgeEvent = fromEventBridge(eventBridgePayload);
 
 `fromSnsHttp` adapts SNS deliveries sent directly to an HTTP/HTTPS endpoint. It
 implements `HttpIngressMapper`, verifies the SNS message signature before
-mapping, and can therefore be passed directly to an HTTP-capable Hooksmith host:
+mapping, and can therefore be passed directly to an HTTP-capable Hooksmith host.
+It is isolated under `@hooksmith/aws/sns/http` so consumers of the ordinary SNS
+adapter and listener do not load the HTTP signature-validation dependency.
 
 ```ts
-import { fromSnsHttp } from "@hooksmith/aws/sns";
+import { fromSnsHttp } from "@hooksmith/aws/sns/http";
 import { createApiGatewayHandler } from "@hooksmith/aws-lambda/api-gateway";
 
 export const handler = createApiGatewayHandler(processor, {
