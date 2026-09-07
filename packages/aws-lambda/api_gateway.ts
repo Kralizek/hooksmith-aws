@@ -46,7 +46,7 @@ export function fromApiGatewayHttpV2(
   return {
     method: event.requestContext.http.method,
     url: buildUrl(event),
-    headers: new Headers(event.headers as HeadersInit | undefined),
+    headers: createHeaders(event.headers),
     body: decodeBody(event.body, event.isBase64Encoded ?? false),
   };
 }
@@ -57,23 +57,40 @@ export function createApiGatewayHandler(
   options: ApiGatewayHandlerOptions,
 ): LambdaHandler<ApiGatewayEventV2, ApiGatewayResultV2> {
   return async (input) => {
+    let document;
+
     try {
       const request = fromApiGatewayHttpV2(input);
-      const document = await options.ingressMapper({ request });
+      document = await options.ingressMapper({ request });
+    } catch {
+      return problemResponse(400, "Bad Request");
+    }
+
+    try {
       const report = await processor(document);
       return reportResponse(report);
     } catch {
-      return problemResponse(400, "Bad Request");
+      return problemResponse(500, "Internal Server Error");
     }
   };
 }
 
+function createHeaders(
+  values: Record<string, string | undefined> | undefined,
+): Headers {
+  const headers = new Headers();
+  for (const [name, value] of Object.entries(values ?? {})) {
+    if (value !== undefined) headers.set(name, value);
+  }
+  return headers;
+}
+
 function buildUrl(event: ApiGatewayEventV2): string {
-  const host = event.requestContext.domainName ?? event.headers?.host ?? "localhost";
-  const forwardedProto = event.headers?.["x-forwarded-proto"] ??
-    event.headers?.["X-Forwarded-Proto"] ?? "https";
+  const headers = createHeaders(event.headers);
+  const host = event.requestContext.domainName ?? headers.get("host") ?? "localhost";
+  const scheme = headers.get("x-forwarded-proto") ?? "https";
   const query = event.rawQueryString ? `?${event.rawQueryString}` : "";
-  return `${forwardedProto}://${host}${event.rawPath}${query}`;
+  return `${scheme}://${host}${event.rawPath}${query}`;
 }
 
 function decodeBody(body: string | null | undefined, base64: boolean): Uint8Array {
