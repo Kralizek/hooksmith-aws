@@ -4,6 +4,7 @@
  * @module
  */
 
+import type { EventDocument } from "@hooksmith/core";
 import type { HttpIngressMapper, HttpIngressRequest } from "@hooksmith/core/ingress";
 import type { RunReport } from "@hooksmith/runtime";
 import type { EventProcessor, LambdaHandler } from "./types.ts";
@@ -36,7 +37,7 @@ export interface ApiGatewayResultV2 {
 
 /** Options used to create an API Gateway HTTP API handler. */
 export interface ApiGatewayHandlerOptions {
-  readonly ingressMapper: HttpIngressMapper;
+  readonly ingressMapper?: HttpIngressMapper;
 }
 
 /** Converts an API Gateway HTTP API v2 event into normalized Hooksmith ingress data. */
@@ -54,14 +55,16 @@ export function fromApiGatewayHttpV2(
 /** Creates an AWS Lambda handler for API Gateway HTTP API v2 requests. */
 export function createApiGatewayHandler(
   processor: EventProcessor,
-  options: ApiGatewayHandlerOptions,
+  options: ApiGatewayHandlerOptions = {},
 ): LambdaHandler<ApiGatewayEventV2, ApiGatewayResultV2> {
   return async (input) => {
-    let document;
+    let document: EventDocument;
 
     try {
       const request = fromApiGatewayHttpV2(input);
-      document = await options.ingressMapper({ request });
+      document = options.ingressMapper
+        ? await options.ingressMapper({ request })
+        : parseEventDocument(request.body);
     } catch {
       return problemResponse(400, "Bad Request");
     }
@@ -103,6 +106,10 @@ function decodeBody(body: string | null | undefined, base64: boolean): Uint8Arra
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes;
+}
+
+function parseEventDocument(body: Uint8Array): EventDocument {
+  return JSON.parse(new TextDecoder().decode(body)) as EventDocument;
 }
 
 function reportResponse(report: RunReport): ApiGatewayResultV2 {
