@@ -5,7 +5,10 @@
  */
 
 import type { EventDocument } from "@hooksmith/core";
-import type { HttpIngressMapper, HttpIngressRequest } from "@hooksmith/core/ingress";
+import type {
+  HttpIngressMapper,
+  HttpIngressRequest,
+} from "@hooksmith/core/ingress";
 import type { RunReport } from "@hooksmith/runtime";
 import type { EventProcessor, LambdaHandler } from "./types.ts";
 
@@ -90,13 +93,17 @@ function createHeaders(
 
 function buildUrl(event: ApiGatewayEventV2): string {
   const headers = createHeaders(event.headers);
-  const host = event.requestContext.domainName ?? headers.get("host") ?? "localhost";
+  const host = event.requestContext.domainName ?? headers.get("host") ??
+    "localhost";
   const scheme = headers.get("x-forwarded-proto") ?? "https";
   const query = event.rawQueryString ? `?${event.rawQueryString}` : "";
   return `${scheme}://${host}${event.rawPath}${query}`;
 }
 
-function decodeBody(body: string | null | undefined, base64: boolean): Uint8Array {
+function decodeBody(
+  body: string | null | undefined,
+  base64: boolean,
+): Uint8Array {
   if (!body) return new Uint8Array();
   if (!base64) return new TextEncoder().encode(body);
 
@@ -120,7 +127,10 @@ function reportResponse(report: RunReport): ApiGatewayResultV2 {
   };
 }
 
-function problemResponse(statusCode: number, title: string): ApiGatewayResultV2 {
+function problemResponse(
+  statusCode: number,
+  title: string,
+): ApiGatewayResultV2 {
   return {
     statusCode,
     headers: { "content-type": "application/problem+json" },
