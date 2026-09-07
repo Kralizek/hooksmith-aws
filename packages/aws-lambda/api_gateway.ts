@@ -116,7 +116,25 @@ function decodeBody(
 }
 
 function parseEventDocument(body: Uint8Array): EventDocument {
-  return JSON.parse(new TextDecoder().decode(body)) as EventDocument;
+  const value = JSON.parse(new TextDecoder().decode(body)) as unknown;
+  if (!isEventDocument(value)) {
+    throw new TypeError("Request body is not a Hooksmith event document.");
+  }
+  return value;
+}
+
+function isEventDocument(value: unknown): value is EventDocument {
+  if (value === null || typeof value !== "object") return false;
+
+  const document = value as Record<string, unknown>;
+  const source = document.source;
+
+  return typeof document.type === "string" &&
+    typeof document.timestamp === "string" &&
+    source !== null &&
+    typeof source === "object" &&
+    typeof (source as Record<string, unknown>).kind === "string" &&
+    "data" in document;
 }
 
 function reportResponse(report: RunReport): ApiGatewayResultV2 {
