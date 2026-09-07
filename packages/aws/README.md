@@ -42,6 +42,26 @@ const snsEvent = fromSns(snsNotification);
 const eventBridgeEvent = fromEventBridge(eventBridgePayload);
 ```
 
+`fromSnsHttp` adapts SNS deliveries sent directly to an HTTP/HTTPS endpoint. It
+implements `HttpIngressMapper`, verifies the SNS message signature before
+mapping, and can therefore be passed directly to an HTTP-capable Hooksmith host:
+
+```ts
+import { fromSnsHttp } from "@hooksmith/aws/sns";
+import { createApiGatewayHandler } from "@hooksmith/aws-lambda/api-gateway";
+
+export const handler = createApiGatewayHandler(processor, {
+  ingressMapper: fromSnsHttp,
+});
+```
+
+SNS HTTP `Notification`, `SubscriptionConfirmation`, and
+`UnsubscribeConfirmation` deliveries become `aws.sns.notification`,
+`aws.sns.subscription-confirmation`, and `aws.sns.unsubscribe-confirmation`
+events respectively. Subscription confirmation is never performed by the
+adapter; `SubscribeURL` and `Token` are preserved under `metadata.sns` so the
+application can decide explicitly whether to act on them.
+
 `fromSqsRaw` and `fromSnsRaw` cover raw delivery where the transported payload
 is already a complete Hooksmith `EventDocument`.
 
