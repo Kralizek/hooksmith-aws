@@ -65,9 +65,10 @@ export function createApiGatewayHandler(
 
     try {
       const request = fromApiGatewayHttpV2(input);
-      document = options.ingressMapper
+      const value = options.ingressMapper
         ? await options.ingressMapper({ request })
-        : parseEventDocument(request.body);
+        : JSON.parse(new TextDecoder().decode(request.body)) as unknown;
+      document = requireEventDocument(value);
     } catch {
       return problemResponse(400, "Bad Request");
     }
@@ -115,10 +116,9 @@ function decodeBody(
   return bytes;
 }
 
-function parseEventDocument(body: Uint8Array): EventDocument {
-  const value = JSON.parse(new TextDecoder().decode(body)) as unknown;
+function requireEventDocument(value: unknown): EventDocument {
   if (!isEventDocument(value)) {
-    throw new TypeError("Request body is not a Hooksmith event document.");
+    throw new TypeError("Ingress mapper did not produce a Hooksmith event document.");
   }
   return value;
 }
