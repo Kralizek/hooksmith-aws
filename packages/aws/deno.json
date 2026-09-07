@@ -7,7 +7,7 @@
     "./lambda": "./lambda.ts",
     "./pipeline/lambda": "./pipeline/lambda.ts",
     "./sns": "./sns.ts",
-    "./sns/http": "./sns/http.ts",
+    "./sns/http": "./adapters/sns_http.ts",
     "./sqs": "./sqs.ts",
     "./ssm": "./ssm.ts",
     "./sts": "./sts.ts"
