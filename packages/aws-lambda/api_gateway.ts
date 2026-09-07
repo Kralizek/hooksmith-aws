@@ -118,7 +118,9 @@ function decodeBody(
 
 function requireEventDocument(value: unknown): EventDocument {
   if (!isEventDocument(value)) {
-    throw new TypeError("Ingress mapper did not produce a Hooksmith event document.");
+    throw new TypeError(
+      "Ingress mapper did not produce a Hooksmith event document.",
+    );
   }
   return value;
 }
