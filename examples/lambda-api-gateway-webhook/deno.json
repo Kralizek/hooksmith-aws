@@ -1,0 +1,14 @@
+{
+  "imports": {
+    "@hooksmith/aws-lambda": "../../packages/aws-lambda/mod.ts",
+    "@hooksmith/aws-lambda/api-gateway": "../../packages/aws-lambda/api_gateway.ts",
+    "@hooksmith/core": "jsr:@hooksmith/core@^0.11.0",
+    "@hooksmith/core/ingress": "jsr:@hooksmith/core@^0.11.0/ingress",
+    "@hooksmith/runtime": "jsr:@hooksmith/runtime@^0.11.0"
+  },
+  "tasks": {
+    "check": "deno check handler.ts"
+  },
+  "minimumDependencyAge": 0,
+  "lock": false
+}
