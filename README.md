@@ -28,6 +28,7 @@ The package exposes service-oriented subpaths so consumers can import only the i
 @hooksmith/aws/lambda
 @hooksmith/aws/pipeline/lambda
 @hooksmith/aws/sns
+@hooksmith/aws/sns/http
 @hooksmith/aws/sqs
 @hooksmith/aws/ssm
 @hooksmith/aws/sts
@@ -41,7 +42,10 @@ Available adapters include:
 
 - `fromSqs()` / `fromSqsRaw()` from `@hooksmith/aws/sqs`;
 - `fromSns()` / `fromSnsRaw()` from `@hooksmith/aws/sns`;
+- `fromSnsHttp()` from `@hooksmith/aws/sns/http`;
 - `fromEventBridge()` from `@hooksmith/aws/eventbridge`.
+
+`fromSnsHttp()` handles SNS deliveries sent to HTTP/HTTPS endpoints. It verifies the SNS message signature before mapping and does not confirm subscriptions automatically. The HTTP-specific adapter is isolated under its own subpath so consumers of `@hooksmith/aws/sns` do not load the signature-validation dependency.
 
 Service payloads become `event.data`, while AWS envelope information is preserved in event metadata. SQS and SNS message attributes are promoted to top-level Hooksmith metadata, with transport-specific fields kept under their service namespaces.
 
@@ -132,11 +136,14 @@ The hosting package runs Hooksmith inside AWS Lambda and exposes service-specifi
 
 - EventBridge;
 - SNS;
-- SQS.
+- SQS;
+- API Gateway HTTP API v2.
 
 A host creates a reusable Hooksmith runtime and processes incoming AWS records through it. The service-specific handlers take care of the AWS invocation shape around the Hooksmith processor.
 
 The SQS host supports partial-batch responses and per-record error handling with access to the Hooksmith execution context, including its logger. SNS and EventBridge handlers preserve their respective AWS delivery semantics while adapting records into Hooksmith processing.
+
+For API Gateway HTTP API v2, use `@hooksmith/aws-lambda/api-gateway`. The handler normalizes the request into Hooksmith's shared HTTP ingress contract and can accept an `HttpIngressMapper`, such as `fromSnsHttp()` from `@hooksmith/aws/sns/http`.
 
 For raw Lambda invocations whose payload is already a Hooksmith `EventDocument`, use the package root:
 
@@ -166,7 +173,8 @@ const config = {
 
 The repository contains focused examples under [`examples`](examples) covering:
 
-- SQS, SNS, and EventBridge event adapters and Lambda hosts;
+- SQS, SNS, EventBridge, and API Gateway event adapters and Lambda hosts;
+- direct EventDocument and generic-webhook API Gateway flows;
 - outbound SQS, SNS, EventBridge, and Lambda listeners;
 - synchronous Lambda pipeline transformations;
 - STS and SSM event enrichment;
