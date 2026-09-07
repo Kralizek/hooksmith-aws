@@ -1,9 +1,9 @@
 import type { EventDocument } from "@hooksmith/core";
 import { assertEquals } from "@std/assert";
 import {
+  type ApiGatewayEventV2,
   createApiGatewayHandler,
   fromApiGatewayHttpV2,
-  type ApiGatewayEventV2,
 } from "./api_gateway.ts";
 
 const eventDocument: EventDocument = {
@@ -57,7 +57,7 @@ Deno.test("API Gateway v2 events normalize into HTTP ingress requests", () => {
 });
 
 Deno.test("API Gateway v2 base64 bodies preserve decoded bytes", () => {
-  const payload = "{\n  \"message\": \"hello\"\n}";
+  const payload = '{\n  "message": "hello"\n}';
   const request = fromApiGatewayHttpV2(
     requestEvent({
       body: btoa(payload),
@@ -120,7 +120,9 @@ Deno.test("API Gateway handler maps ingress failures to 400", async () => {
 });
 
 Deno.test("API Gateway handler maps processor failures to 500", async () => {
-  const handler = createApiGatewayHandler(() => Promise.reject(new Error("boom")));
+  const handler = createApiGatewayHandler(() =>
+    Promise.reject(new Error("boom"))
+  );
 
   const response = await handler(requestEvent());
 
