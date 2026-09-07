@@ -41,5 +41,5 @@ The sample webhook payload is expected to look like:
 }
 ```
 
-A real integration can replace `readWebhook` with a reusable mapper package,
-for example one that validates webhook signatures using the raw request bytes.
+A real integration can replace `readWebhook` with a reusable mapper package, for
+example one that validates webhook signatures using the raw request bytes.
