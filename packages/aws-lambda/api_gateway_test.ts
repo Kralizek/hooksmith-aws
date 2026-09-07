@@ -119,6 +119,25 @@ Deno.test("API Gateway handler rejects invalid event document shapes", async () 
   assertEquals(response.headers?.["content-type"], "application/problem+json");
 });
 
+Deno.test("API Gateway handler rejects invalid mapper output", async () => {
+  let processed = false;
+  const handler = createApiGatewayHandler(
+    () => {
+      processed = true;
+      return Promise.resolve(report);
+    },
+    {
+      ingressMapper: () => ({ foo: "bar" } as unknown as EventDocument),
+    },
+  );
+
+  const response = await handler(requestEvent());
+
+  assertEquals(processed, false);
+  assertEquals(response.statusCode, 400);
+  assertEquals(response.headers?.["content-type"], "application/problem+json");
+});
+
 Deno.test("API Gateway handler maps ingress failures to 400", async () => {
   const handler = createApiGatewayHandler(
     () => Promise.resolve(report),
