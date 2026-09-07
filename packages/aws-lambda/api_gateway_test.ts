@@ -110,7 +110,9 @@ Deno.test("API Gateway handler rejects invalid event document shapes", async () 
     return Promise.resolve(report);
   });
 
-  const response = await handler(requestEvent({ body: JSON.stringify({ foo: "bar" }) }));
+  const response = await handler(
+    requestEvent({ body: JSON.stringify({ foo: "bar" }) }),
+  );
 
   assertEquals(processed, false);
   assertEquals(response.statusCode, 400);
