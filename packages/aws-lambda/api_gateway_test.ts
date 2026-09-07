@@ -103,6 +103,20 @@ Deno.test("API Gateway handler accepts Hooksmith event documents without a mappe
   assertEquals(response.statusCode, 200);
 });
 
+Deno.test("API Gateway handler rejects invalid event document shapes", async () => {
+  let processed = false;
+  const handler = createApiGatewayHandler(() => {
+    processed = true;
+    return Promise.resolve(report);
+  });
+
+  const response = await handler(requestEvent({ body: JSON.stringify({ foo: "bar" }) }));
+
+  assertEquals(processed, false);
+  assertEquals(response.statusCode, 400);
+  assertEquals(response.headers?.["content-type"], "application/problem+json");
+});
+
 Deno.test("API Gateway handler maps ingress failures to 400", async () => {
   const handler = createApiGatewayHandler(
     () => Promise.resolve(report),
