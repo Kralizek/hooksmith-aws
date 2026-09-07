@@ -1,4 +1,6 @@
 import type { EventDocument } from "@hooksmith/core";
+import type { HttpIngressContext } from "@hooksmith/core/ingress";
+import MessageValidator from "sns-validator";
 import { parseEventDocument, parsePayload } from "../shared/payload.ts";
 
 /** SNS notification shape adapted into a Hooksmith event document. */
@@ -13,6 +15,8 @@ export interface SnsNotification {
   Signature?: string;
   SigningCertURL?: string;
   UnsubscribeURL?: string;
+  SubscribeURL?: string;
+  Token?: string;
   MessageAttributes?: Record<string, unknown>;
 }
 
@@ -28,10 +32,12 @@ export function fromSns<TData = unknown>(
     signature: notification.Signature,
     signingCertUrl: notification.SigningCertURL,
     unsubscribeUrl: notification.UnsubscribeURL,
+    subscribeUrl: notification.SubscribeURL,
+    token: notification.Token,
   });
 
   return {
-    type: "aws.sns.notification",
+    type: eventType(notification.Type),
     timestamp: Temporal.Instant.from(notification.Timestamp).toString(),
     source: {
       kind: "aws.sns",
@@ -49,10 +55,48 @@ export function fromSns<TData = unknown>(
   };
 }
 
+/** Maps a signed Amazon SNS HTTP delivery into a Hooksmith event document. */
+export async function fromSnsHttp<TData = unknown>(
+  context: HttpIngressContext,
+): Promise<EventDocument<TData>> {
+  const notification = JSON.parse(
+    new TextDecoder().decode(context.request.body),
+  ) as SnsNotification;
+
+  await validateSnsMessage(notification);
+  return fromSns<TData>(notification);
+}
+
 export function fromSnsRaw<TData = unknown>(
   payload: unknown,
 ): EventDocument<TData> {
   return parseEventDocument<TData>(payload);
+}
+
+function validateSnsMessage(notification: SnsNotification): Promise<void> {
+  const validator = new MessageValidator();
+  return new Promise((resolve, reject) => {
+    validator.validate(notification, (error: Error | null) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+function eventType(type: string): string {
+  switch (type) {
+    case "Notification":
+      return "aws.sns.notification";
+    case "SubscriptionConfirmation":
+      return "aws.sns.subscription-confirmation";
+    case "UnsubscribeConfirmation":
+      return "aws.sns.unsubscribe-confirmation";
+    default:
+      return `aws.sns.${type}`;
+  }
 }
 
 function readMessageAttributes(
