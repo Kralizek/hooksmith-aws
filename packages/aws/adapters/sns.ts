@@ -13,6 +13,8 @@ export interface SnsNotification {
   Signature?: string;
   SigningCertURL?: string;
   UnsubscribeURL?: string;
+  SubscribeURL?: string;
+  Token?: string;
   MessageAttributes?: Record<string, unknown>;
 }
 
@@ -28,10 +30,12 @@ export function fromSns<TData = unknown>(
     signature: notification.Signature,
     signingCertUrl: notification.SigningCertURL,
     unsubscribeUrl: notification.UnsubscribeURL,
+    subscribeUrl: notification.SubscribeURL,
+    token: notification.Token,
   });
 
   return {
-    type: "aws.sns.notification",
+    type: eventType(notification.Type),
     timestamp: Temporal.Instant.from(notification.Timestamp).toString(),
     source: {
       kind: "aws.sns",
@@ -53,6 +57,19 @@ export function fromSnsRaw<TData = unknown>(
   payload: unknown,
 ): EventDocument<TData> {
   return parseEventDocument<TData>(payload);
+}
+
+function eventType(type: string): string {
+  switch (type) {
+    case "Notification":
+      return "aws.sns.notification";
+    case "SubscriptionConfirmation":
+      return "aws.sns.subscription-confirmation";
+    case "UnsubscribeConfirmation":
+      return "aws.sns.unsubscribe-confirmation";
+    default:
+      return `aws.sns.${type}`;
+  }
 }
 
 function readMessageAttributes(
