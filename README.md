@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Kralizek/hooksmith-aws/actions/workflows/ci.yml/badge.svg)](https://github.com/Kralizek/hooksmith-aws/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/Kralizek/hooksmith-aws)](https://github.com/Kralizek/hooksmith-aws/releases/latest)
+[![Hooksmith release](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FKralizek%2Fhooksmith-aws%2Fbadges%2Fhooksmith.json)](https://github.com/Kralizek/hooksmith/releases)
 
 AWS integrations for [Hooksmith](https://github.com/Kralizek/hooksmith).
 
