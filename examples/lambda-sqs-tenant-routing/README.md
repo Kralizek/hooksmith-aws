@@ -4,6 +4,12 @@ This example composes the existing SQS Lambda host with the synchronous Lambda
 pipeline transformer to route each SQS record to a tenant-isolated downstream
 Lambda.
 
+> **Capability example only.** This example demonstrates how the Hooksmith AWS
+> integrations fit together. It is not a production-ready security or tenant
+> authorization reference. In a real system, tenant identity and downstream
+> destination selection must come from sources your application treats as
+> trusted and must be validated according to your own authorization model.
+
 The SQS reader owns tenant resolution because it can inspect the full adapted
 Hooksmith event, including promoted message attributes and
 `metadata.sqs.attributes.MessageGroupId`. It then resolves the downstream
