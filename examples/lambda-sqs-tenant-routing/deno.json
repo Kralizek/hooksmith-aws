@@ -2,12 +2,11 @@
   "imports": {
     "@aws-sdk/client-lambda": "npm:@aws-sdk/client-lambda@^3.0.0",
     "@aws-sdk/client-sqs": "npm:@aws-sdk/client-sqs@^3.0.0",
+    "@hooksmith/aws/lambda": "../../packages/aws/lambda.ts",
     "@hooksmith/aws/sqs": "../../packages/aws/sqs.ts",
-    "@hooksmith/aws/pipeline/lambda": "../../packages/aws/pipeline/lambda.ts",
     "@hooksmith/aws-lambda": "../../packages/aws-lambda/mod.ts",
     "@hooksmith/aws-lambda/sqs": "../../packages/aws-lambda/sqs.ts",
     "@hooksmith/core": "jsr:@hooksmith/core@^0.12.0",
-    "@hooksmith/pipeline": "jsr:@hooksmith/pipeline@^0.12.0",
     "@hooksmith/runtime": "jsr:@hooksmith/runtime@^0.12.0"
   },
   "tasks": {
