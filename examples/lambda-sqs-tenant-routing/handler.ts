@@ -91,12 +91,12 @@ function resolveTenantId(document: EventDocument<Order>): string {
 }
 
 function resolveTarget(tenantId: string): string {
-  const targets: Record<string, string> = {
-    "tenant-a": "orders-processor-a",
-    "tenant-b": "orders-processor-b",
-  };
+  const targets = new Map<string, string>([
+    ["tenant-a", "orders-processor-a"],
+    ["tenant-b", "orders-processor-b"],
+  ]);
 
-  const functionName = targets[tenantId];
+  const functionName = targets.get(tenantId);
   if (functionName === undefined) {
     throw new Error(`No downstream Lambda configured for tenant ${tenantId}.`);
   }
