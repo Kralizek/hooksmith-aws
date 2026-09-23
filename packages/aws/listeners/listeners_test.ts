@@ -184,7 +184,7 @@ Deno.test("invokeLambdaFunction resolves tenant id dynamically", async () => {
     ...event,
     metadata: { tenantId: "tenant-42" },
   };
-  const listener = invokeLambdaFunction({
+  const listener = invokeLambdaFunction<Event<{ orderId: string }>>({
     functionName: (current) => `process-${current.data.orderId}`,
     tenantId: (current) => current.metadata?.tenantId as string,
     client: {
