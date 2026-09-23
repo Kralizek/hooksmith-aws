@@ -74,7 +74,7 @@ const listener = sendSqsMessage({
 });
 ```
 
-Lambda listeners use asynchronous invocation (`InvocationType: "Event"`), preserving the listener abstraction as a terminal side effect.
+Lambda listeners use asynchronous invocation (`InvocationType: "Event"`), preserving the listener abstraction as a terminal side effect. Function name, tenant ID, and payload can be resolved dynamically from the current event.
 
 ### Pipeline transformations
 
