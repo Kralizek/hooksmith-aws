@@ -13,12 +13,12 @@ small route value containing:
 - the downstream function name;
 - the payload to forward.
 
-The pipeline then resolves `functionName`, `tenantId`, and `payload`
-dynamically from that route value.
+The pipeline then resolves `functionName`, `tenantId`, and `payload` dynamically
+from that route value.
 
-Tenant identity is application-defined. The example checks a promoted
-`tenantId` message attribute first and then `MessageGroupId`; applications
-can instead inspect the payload, call a registry, or use another source.
+Tenant identity is application-defined. The example checks a promoted `tenantId`
+message attribute first and then `MessageGroupId`; applications can instead
+inspect the payload, call a registry, or use another source.
 
 The existing `@hooksmith/aws-lambda/sqs` host retains SQS partial-batch
 semantics. A failed downstream invocation makes Hooksmith processing
