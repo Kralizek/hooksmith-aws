@@ -11,7 +11,7 @@ import {
   LambdaClient,
   type LambdaClientConfig,
 } from "@aws-sdk/client-lambda";
-import type { Transformer, TransformContext } from "@hooksmith/pipeline";
+import type { TransformContext, Transformer } from "@hooksmith/pipeline";
 
 /** Minimal Lambda client contract used by the pipeline transformer. */
 export interface LambdaClientLike {
