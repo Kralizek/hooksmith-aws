@@ -8,10 +8,7 @@ import type {
 import { fromSqs } from "@hooksmith/aws/sqs";
 import { lambda } from "@hooksmith/aws/pipeline/lambda";
 import { createProcessor } from "@hooksmith/aws-lambda";
-import {
-  createHandler,
-  type LambdaRecord,
-} from "@hooksmith/aws-lambda/sqs";
+import { createHandler, type LambdaRecord } from "@hooksmith/aws-lambda/sqs";
 import { pipe } from "@hooksmith/pipeline";
 import {
   createConsoleLogWriter,
