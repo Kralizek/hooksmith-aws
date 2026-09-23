@@ -123,15 +123,15 @@ const listener = sendSqsMessage({
 Lambda invocation listeners are asynchronous sinks. They always use AWS
 `InvocationType: "Event"`; synchronous request/response invocation belongs to
 the enrichment or pipeline transformation abstractions. `functionName`,
-`tenantId`, and `payload` can be resolved from the current Hooksmith event,
-so listeners can also invoke tenant-isolated Lambda functions without a
+`tenantId`, and `payload` can be resolved from the current Hooksmith event, so
+listeners can also invoke tenant-isolated Lambda functions without a
 tenant-specific listener abstraction.
 
 Each listener exposes relevant native AWS SDK input fields through `input` (or
 `entry` for EventBridge). Explicit Hooksmith-friendly options and fixed listener
 semantics cannot be overridden through the native escape hatch. For Lambda,
-`FunctionName`, `Payload`, `InvocationType`, and `TenantId` are owned by
-the listener.
+`FunctionName`, `Payload`, `InvocationType`, and `TenantId` are owned by the
+listener.
 
 ## Pipeline transformations
 
