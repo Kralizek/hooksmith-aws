@@ -43,6 +43,80 @@ Deno.test("lambda transforms input through synchronous invocation", async () => 
   assertEquals(result, { orderId: "42", risk: "low" });
 });
 
+
+Deno.test("lambda resolves dynamic invocation routing values", async () => {
+  let command: InvokeCommand | undefined;
+  const transformer = lambda<
+    {
+      tenantId: string;
+      target: string;
+      payload: { orderId: string };
+      qualifier: string;
+    },
+    { accepted: boolean }
+  >({
+    functionName: (input) => input.target,
+    tenantId: (input) => input.tenantId,
+    payload: (input) => input.payload,
+    input: (input, transformContext) => ({
+      Qualifier: input.qualifier,
+      ClientContext: transformContext.originalData === context.originalData
+        ? "context-ok"
+        : "context-missing",
+    }),
+    client: {
+      send(value) {
+        command = value;
+        return response({
+          StatusCode: 200,
+          Payload: payload('{"accepted":true}'),
+        });
+      },
+    },
+  });
+
+  const result = await transformer.transform(
+    {
+      tenantId: "tenant-42",
+      target: "orders-processor",
+      payload: { orderId: "42" },
+      qualifier: "live",
+    },
+    context,
+  );
+
+  assertEquals(command?.input.FunctionName, "orders-processor");
+  assertEquals(command?.input.TenantId, "tenant-42");
+  assertEquals(command?.input.InvocationType, "RequestResponse");
+  assertEquals(command?.input.Qualifier, "live");
+  assertEquals(command?.input.ClientContext, "context-ok");
+  assertEquals(
+    new TextDecoder().decode(command?.input.Payload as Uint8Array),
+    '{"orderId":"42"}',
+  );
+  assertEquals(result, { accepted: true });
+});
+
+Deno.test("lambda keeps tenant id optional", async () => {
+  let command: InvokeCommand | undefined;
+  const transformer = lambda<{ orderId: string }, { accepted: boolean }>({
+    functionName: "orders-processor",
+    client: {
+      send(value) {
+        command = value;
+        return response({
+          StatusCode: 200,
+          Payload: payload('{"accepted":true}'),
+        });
+      },
+    },
+  });
+
+  await transformer.transform({ orderId: "42" }, context);
+
+  assertEquals(command?.input.TenantId, undefined);
+});
+
 Deno.test("lambda JSON-encodes string input", async () => {
   let command: InvokeCommand | undefined;
   const transformer = lambda<string, string>({
