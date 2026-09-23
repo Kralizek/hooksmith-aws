@@ -177,8 +177,8 @@ integration.
 As with the listeners, use `clientConfig` for normal SDK customization or inject
 a compatible client through `client` for custom credentials, LocalStack, or
 another endpoint. Native invocation fields can be supplied through `input`, but
-`FunctionName`, `Payload`, `InvocationType`, and `TenantId` are owned by
-the transformer.
+`FunctionName`, `Payload`, `InvocationType`, and `TenantId` are owned by the
+transformer.
 
 AWS credentials and region use the normal AWS SDK credential and configuration
 resolution unless a custom client or client configuration is supplied.
