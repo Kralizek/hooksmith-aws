@@ -26,11 +26,26 @@ export type PipelineValueOrFactory<TValue, TInput> =
     context: TransformContext,
   ) => TValue | Promise<TValue>);
 
+/** Pipeline-aware payload selector for Lambda invocation. */
+export type PipelinePayloadFactory<TInput> = (
+  input: TInput,
+  context: TransformContext,
+) => unknown | Promise<unknown>;
+
+/** Static payload values accepted without a selector callback. */
+export type StaticPipelinePayload =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly unknown[]
+  | Record<string, unknown>;
+
 /** Options used to synchronously invoke a Lambda function as a pipeline stage. */
 export interface LambdaTransformerOptions<TInput> {
   functionName: PipelineValueOrFactory<string, TInput>;
   tenantId?: PipelineValueOrFactory<string, TInput>;
-  payload?: PipelineValueOrFactory<unknown, TInput>;
+  payload?: StaticPipelinePayload | PipelinePayloadFactory<TInput>;
   name?: string;
   input?: PipelineValueOrFactory<
     Omit<
