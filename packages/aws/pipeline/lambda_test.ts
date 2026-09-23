@@ -43,7 +43,6 @@ Deno.test("lambda transforms input through synchronous invocation", async () => 
   assertEquals(result, { orderId: "42", risk: "low" });
 });
 
-
 Deno.test("lambda resolves dynamic invocation routing values", async () => {
   let command: InvokeCommand | undefined;
   const transformer = lambda<
