@@ -38,8 +38,7 @@ export type StaticPipelinePayload =
   | number
   | boolean
   | null
-  | readonly unknown[]
-  | Record<string, unknown>;
+  | object;
 
 /** Options used to synchronously invoke a Lambda function as a pipeline stage. */
 export interface LambdaTransformerOptions<TInput = unknown> {
@@ -93,14 +92,14 @@ export function lambda<TInput, TOutput>(
         serialized = JSON.stringify(selectedPayload);
       } catch (error) {
         throw new TypeError(
-          "Lambda transformer input must be JSON-serializable.",
+          "Lambda transformer payload must be JSON-serializable.",
           { cause: error },
         );
       }
 
       if (serialized === undefined) {
         throw new TypeError(
-          "Lambda transformer input must be JSON-serializable.",
+          "Lambda transformer payload must be JSON-serializable.",
         );
       }
 
