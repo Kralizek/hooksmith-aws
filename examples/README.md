@@ -13,6 +13,7 @@ The examples are intentionally small and isolated. Each directory has its own
 | [`outbound-listeners`](./outbound-listeners)                 | Compose multiple AWS listeners on one Hooksmith route.                                                  |
 | [`aws-lambda`](./aws-lambda)                                 | Run Hooksmith in Lambda when the invocation payload is already an `EventDocument`.                      |
 | [`lambda-sqs`](./lambda-sqs)                                 | Adapt an SQS Lambda batch and process each message with Hooksmith.                                      |
+| [`lambda-sqs-tenant-routing`](./lambda-sqs-tenant-routing)   | Route SQS records synchronously to tenant-isolated Lambda functions.                                    |
 | [`lambda-sns`](./lambda-sns)                                 | Adapt SNS Lambda notifications and process them with Hooksmith.                                         |
 | [`lambda-eventbridge`](./lambda-eventbridge)                 | Adapt an EventBridge event and process it with Hooksmith.                                               |
 | [`lambda-api-gateway`](./lambda-api-gateway)                 | Process API Gateway HTTP API v2 requests whose body is already a Hooksmith `EventDocument`.             |

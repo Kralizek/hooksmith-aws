@@ -17,9 +17,13 @@ export interface LambdaClientLike {
 /** Options used to invoke a Lambda function asynchronously from a Hooksmith event. */
 export interface InvokeLambdaFunctionOptions<TEvent extends Event = Event> {
   functionName: ValueOrFactory<string, TEvent>;
+  tenantId?: ValueOrFactory<string, TEvent>;
   payload?: ValueOrFactory<unknown, TEvent>;
   input?: ValueOrFactory<
-    Omit<InvokeCommandInput, "FunctionName" | "Payload" | "InvocationType">,
+    Omit<
+      InvokeCommandInput,
+      "FunctionName" | "Payload" | "InvocationType" | "TenantId"
+    >,
     TEvent
   >;
   client?: LambdaClientLike;
@@ -39,6 +43,9 @@ export function invokeLambdaFunction<TEvent extends Event = Event>(
         ? {}
         : await resolve(options.input, event, context);
       const functionName = await resolve(options.functionName, event, context);
+      const tenantId = options.tenantId === undefined
+        ? undefined
+        : await resolve(options.tenantId, event, context);
       const payload = options.payload === undefined
         ? event.data
         : await resolve(options.payload, event, context);
@@ -49,6 +56,7 @@ export function invokeLambdaFunction<TEvent extends Event = Event>(
           FunctionName: functionName,
           Payload: encoder.encode(stringifyPayload(payload)),
           InvocationType: "Event",
+          TenantId: tenantId,
         }),
       );
       const statusCode = response.StatusCode;

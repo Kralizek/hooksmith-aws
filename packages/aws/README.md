@@ -122,11 +122,16 @@ const listener = sendSqsMessage({
 
 Lambda invocation listeners are asynchronous sinks. They always use AWS
 `InvocationType: "Event"`; synchronous request/response invocation belongs to
-the enrichment or pipeline transformation abstractions.
+the enrichment or pipeline transformation abstractions. `functionName`,
+`tenantId`, and `payload` can be resolved from the current Hooksmith event, so
+listeners can also invoke tenant-isolated Lambda functions without a
+tenant-specific listener abstraction.
 
 Each listener exposes relevant native AWS SDK input fields through `input` (or
 `entry` for EventBridge). Explicit Hooksmith-friendly options and fixed listener
-semantics cannot be overridden through the native escape hatch.
+semantics cannot be overridden through the native escape hatch. For Lambda,
+`FunctionName`, `Payload`, `InvocationType`, and `TenantId` are owned by the
+listener.
 
 ## Pipeline transformations
 
@@ -145,10 +150,29 @@ const listener = pipe(
 );
 ```
 
-The transformer always uses `InvocationType: "RequestResponse"`. It serializes
-the current pipeline value as JSON and requires the Lambda response payload to
-contain valid JSON for the next pipeline value. Function errors, non-200 status
-codes, missing payloads, and invalid JSON fail the transformation.
+The transformer always uses `InvocationType: "RequestResponse"`. By default it
+serializes the current pipeline value as JSON, but `functionName`, `tenantId`,
+`payload`, and native `input` fields can also be resolved from the current
+pipeline value and transform context. The Lambda response payload must contain
+valid JSON for the next pipeline value. Function errors, non-200 status codes,
+missing payloads, and invalid JSON fail the transformation.
+
+For tenant-isolated Lambda routing, resolve tenant identity before the pipeline
+when it depends on event metadata, then carry it in the pipeline value:
+
+```ts
+const listener = pipe(
+  lambda<TenantRoute, DownstreamResponse>({
+    functionName: (route) => route.functionName,
+    tenantId: (route) => route.tenantId,
+    payload: (route) => route.payload,
+  }),
+  terminalListener,
+);
+```
+
+This keeps tenant resolution application-defined while the Lambda transformer
+owns only invocation mechanics.
 
 The pipeline integration is isolated behind its own subpath. Consumers that use
 only the AWS adapters/listeners do not import `@hooksmith/pipeline`, and
@@ -158,7 +182,8 @@ integration.
 As with the listeners, use `clientConfig` for normal SDK customization or inject
 a compatible client through `client` for custom credentials, LocalStack, or
 another endpoint. Native invocation fields can be supplied through `input`, but
-`FunctionName`, `Payload`, and `InvocationType` are owned by the transformer.
+`FunctionName`, `Payload`, `InvocationType`, and `TenantId` are owned by the
+transformer.
 
 AWS credentials and region use the normal AWS SDK credential and configuration
 resolution unless a custom client or client configuration is supplied.

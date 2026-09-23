@@ -178,6 +178,58 @@ Deno.test("invokeLambdaFunction invokes asynchronously with event data", async (
   });
 });
 
+Deno.test("invokeLambdaFunction resolves tenant id dynamically", async () => {
+  let command: InvokeCommand | undefined;
+  const tenantEvent: Event<{ orderId: string }> = {
+    ...event,
+    metadata: { tenantId: "tenant-42" },
+  };
+  const listener = invokeLambdaFunction<Event<{ orderId: string }>>({
+    functionName: (current) => `process-${current.data.orderId}`,
+    tenantId: (current) => current.metadata?.tenantId as string,
+    client: {
+      send(value) {
+        command = value;
+        return Promise.resolve(
+          {
+            $metadata: {},
+            StatusCode: 202,
+          } satisfies InvokeCommandOutput,
+        );
+      },
+    },
+  });
+
+  const result = await listener.run(tenantEvent, context);
+
+  assertEquals(command?.input.FunctionName, "process-42");
+  assertEquals(command?.input.TenantId, "tenant-42");
+  assertEquals(command?.input.InvocationType, "Event");
+  assertEquals(result.success, true);
+});
+
+Deno.test("invokeLambdaFunction leaves tenant id unset by default", async () => {
+  let command: InvokeCommand | undefined;
+  const listener = invokeLambdaFunction({
+    functionName: "process-order",
+    client: {
+      send(value) {
+        command = value;
+        return Promise.resolve(
+          {
+            $metadata: {},
+            StatusCode: 202,
+          } satisfies InvokeCommandOutput,
+        );
+      },
+    },
+  });
+
+  await listener.run(event, context);
+
+  assertEquals(command?.input.TenantId, undefined);
+});
+
 Deno.test("invokeLambdaFunction rejects non-serializable payloads", async () => {
   const undefinedEvent: Event<undefined> = {
     type: "order.created",

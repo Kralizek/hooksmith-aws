@@ -74,7 +74,7 @@ const listener = sendSqsMessage({
 });
 ```
 
-Lambda listeners use asynchronous invocation (`InvocationType: "Event"`), preserving the listener abstraction as a terminal side effect.
+Lambda listeners use asynchronous invocation (`InvocationType: "Event"`), preserving the listener abstraction as a terminal side effect. Function name, tenant ID, and payload can be resolved dynamically from the current event.
 
 ### Pipeline transformations
 
@@ -92,7 +92,7 @@ const listener = pipe(
 );
 ```
 
-The transformer uses `InvocationType: "RequestResponse"` and fails on function errors, non-200 invocation status codes, missing payloads, or invalid JSON.
+The transformer uses `InvocationType: "RequestResponse"` and fails on function errors, non-200 invocation status codes, missing payloads, or invalid JSON. Function name, tenant ID, payload, and native invocation input can be resolved from the current pipeline value, which supports tenant-aware and dynamically-routed Lambda calls without a separate routing abstraction.
 
 ### Event enrichers
 
@@ -177,6 +177,7 @@ The repository contains focused examples under [`examples`](examples) covering:
 - direct EventDocument and generic-webhook API Gateway flows;
 - outbound SQS, SNS, EventBridge, and Lambda listeners;
 - synchronous Lambda pipeline transformations;
+- SQS-to-tenant-isolated-Lambda routing;
 - STS and SSM event enrichment;
 - Lambda execution-environment enrichment.
 

@@ -11,20 +11,47 @@ import {
   LambdaClient,
   type LambdaClientConfig,
 } from "@aws-sdk/client-lambda";
-import type { Transformer } from "@hooksmith/pipeline";
+import type { TransformContext, Transformer } from "@hooksmith/pipeline";
 
 /** Minimal Lambda client contract used by the pipeline transformer. */
 export interface LambdaClientLike {
   send(command: InvokeCommand): Promise<InvokeCommandOutput>;
 }
 
+/** Fixed value or pipeline-input-aware factory. */
+export type PipelineValueOrFactory<TValue, TInput> =
+  | TValue
+  | ((
+    input: TInput,
+    context: TransformContext,
+  ) => TValue | Promise<TValue>);
+
+/** Pipeline-aware payload selector for Lambda invocation. */
+export type PipelinePayloadFactory<TInput> = (
+  input: TInput,
+  context: TransformContext,
+) => unknown | Promise<unknown>;
+
+/** Static payload values accepted without a selector callback. */
+export type StaticPipelinePayload =
+  | string
+  | number
+  | boolean
+  | null
+  | object;
+
 /** Options used to synchronously invoke a Lambda function as a pipeline stage. */
-export interface LambdaTransformerOptions {
-  functionName: string;
+export interface LambdaTransformerOptions<TInput = unknown> {
+  functionName: PipelineValueOrFactory<string, TInput>;
+  tenantId?: PipelineValueOrFactory<string, TInput>;
+  payload?: StaticPipelinePayload | PipelinePayloadFactory<TInput>;
   name?: string;
-  input?: Omit<
-    InvokeCommandInput,
-    "FunctionName" | "Payload" | "InvocationType"
+  input?: PipelineValueOrFactory<
+    Omit<
+      InvokeCommandInput,
+      "FunctionName" | "Payload" | "InvocationType" | "TenantId"
+    >,
+    TInput
   >;
   client?: LambdaClientLike;
   clientConfig?: LambdaClientConfig;
@@ -33,47 +60,62 @@ export interface LambdaTransformerOptions {
 /**
  * Transforms a pipeline value by synchronously invoking an AWS Lambda function.
  *
- * The input value is JSON-serialized into the Lambda payload and the Lambda
- * response payload must be valid JSON representing the output value.
+ * The selected payload is JSON-serialized into the Lambda request and the
+ * Lambda response payload must be valid JSON representing the output value.
  */
 export function lambda<TInput, TOutput>(
-  options: LambdaTransformerOptions,
+  options: LambdaTransformerOptions<TInput>,
 ): Transformer<TInput, TOutput> {
   const client = options.client ?? new LambdaClient(options.clientConfig ?? {});
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
+  const defaultName = typeof options.functionName === "string"
+    ? `aws-lambda:${options.functionName}`
+    : "aws-lambda";
 
   return {
-    name: options.name ?? `aws-lambda:${options.functionName}`,
-    async transform(input): Promise<TOutput> {
+    name: options.name ?? defaultName,
+    async transform(input, context): Promise<TOutput> {
+      const functionName = await resolve(options.functionName, input, context);
+      const tenantId = options.tenantId === undefined
+        ? undefined
+        : await resolve(options.tenantId, input, context);
+      const nativeInput = options.input === undefined
+        ? {}
+        : await resolve(options.input, input, context);
+      const selectedPayload = options.payload === undefined
+        ? input
+        : await resolve(options.payload, input, context);
+
       let serialized: string | undefined;
       try {
-        serialized = JSON.stringify(input);
+        serialized = JSON.stringify(selectedPayload);
       } catch (error) {
         throw new TypeError(
-          "Lambda transformer input must be JSON-serializable.",
+          "Lambda transformer payload must be JSON-serializable.",
           { cause: error },
         );
       }
 
       if (serialized === undefined) {
         throw new TypeError(
-          "Lambda transformer input must be JSON-serializable.",
+          "Lambda transformer payload must be JSON-serializable.",
         );
       }
 
       const response = await client.send(
         new InvokeCommand({
-          ...options.input,
-          FunctionName: options.functionName,
+          ...nativeInput,
+          FunctionName: functionName,
           InvocationType: "RequestResponse",
           Payload: encoder.encode(serialized),
+          TenantId: tenantId,
         }),
       );
 
       if (response.StatusCode !== 200) {
         throw new Error(
-          `Lambda ${options.functionName} returned status ${
+          `Lambda ${functionName} returned status ${
             response.StatusCode ?? "unknown"
           }.`,
         );
@@ -81,7 +123,7 @@ export function lambda<TInput, TOutput>(
 
       if (response.FunctionError !== undefined) {
         throw new Error(
-          `Lambda ${options.functionName} returned a function error: ${response.FunctionError}.`,
+          `Lambda ${functionName} returned a function error: ${response.FunctionError}.`,
           {
             cause: response.Payload === undefined
               ? undefined
@@ -92,7 +134,7 @@ export function lambda<TInput, TOutput>(
 
       if (response.Payload === undefined || response.Payload.length === 0) {
         throw new Error(
-          `Lambda ${options.functionName} returned no payload.`,
+          `Lambda ${functionName} returned no payload.`,
         );
       }
 
@@ -101,10 +143,25 @@ export function lambda<TInput, TOutput>(
         return JSON.parse(payload) as TOutput;
       } catch (error) {
         throw new TypeError(
-          `Lambda ${options.functionName} returned an invalid JSON payload.`,
+          `Lambda ${functionName} returned an invalid JSON payload.`,
           { cause: error },
         );
       }
     },
   };
+}
+
+async function resolve<TValue, TInput>(
+  value: PipelineValueOrFactory<TValue, TInput>,
+  input: TInput,
+  context: TransformContext,
+): Promise<TValue> {
+  return typeof value === "function"
+    ? await (
+      value as (
+        input: TInput,
+        context: TransformContext,
+      ) => TValue | Promise<TValue>
+    )(input, context)
+    : value;
 }
