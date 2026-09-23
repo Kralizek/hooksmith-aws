@@ -1,15 +1,8 @@
-import type {
-  Config,
-  Context,
-  Event,
-  EventDocument,
-  Listener,
-} from "@hooksmith/core";
+import type { Config, Context, Event } from "@hooksmith/core";
+import { invokeLambdaFunction } from "@hooksmith/aws/lambda";
 import { fromSqs } from "@hooksmith/aws/sqs";
-import { lambda } from "@hooksmith/aws/pipeline/lambda";
 import { createProcessor } from "@hooksmith/aws-lambda";
-import { createHandler, type LambdaRecord } from "@hooksmith/aws-lambda/sqs";
-import { pipe } from "@hooksmith/pipeline";
+import { createHandler } from "@hooksmith/aws-lambda/sqs";
 import {
   createConsoleLogWriter,
   createLoggerFactory,
@@ -20,32 +13,16 @@ interface Order {
   orderId: string;
 }
 
-interface TenantRoute {
-  tenantId: string;
-  functionName: string;
-  payload: Order;
-}
-
-const complete: Listener<Event<unknown>> = {
-  name: "complete-tenant-route",
-  run() {
-    return { success: true };
-  },
-};
-
-const config: Config<Event<TenantRoute>> = {
+const config: Config<Event<Order>> = {
   routes: [
     {
       name: "route-tenant-message",
       listeners: [
-        pipe(
-          lambda<TenantRoute, unknown>({
-            functionName: (route) => route.functionName,
-            tenantId: (route) => route.tenantId,
-            payload: (route) => route.payload,
-          }),
-          complete,
-        ),
+        invokeLambdaFunction<Event<Order>>({
+          functionName: (event) => resolveTarget(resolveTenantId(event)),
+          tenantId: resolveTenantId,
+          payload: (event) => event.data,
+        }),
       ],
     },
   ],
@@ -57,29 +34,15 @@ const context: Context = {
 
 const processor = createProcessor(createRuntime(config, context));
 
-export const handler = createHandler(readTenantRoute, processor, context);
+export const handler = createHandler(fromSqs<Order>, processor, context);
 
-function readTenantRoute(record: LambdaRecord): EventDocument<TenantRoute> {
-  const document = fromSqs<Order>(record);
-  const tenantId = resolveTenantId(document);
-
-  return {
-    ...document,
-    data: {
-      tenantId,
-      functionName: resolveTarget(tenantId),
-      payload: document.data,
-    },
-  };
-}
-
-function resolveTenantId(document: EventDocument<Order>): string {
-  const attributeTenant = document.metadata?.tenantId;
+function resolveTenantId(event: Event<Order>): string {
+  const attributeTenant = event.metadata?.tenantId;
   if (typeof attributeTenant === "string" && attributeTenant.length > 0) {
     return attributeTenant;
   }
 
-  const sqs = document.metadata?.sqs as
+  const sqs = event.metadata?.sqs as
     | { attributes?: Record<string, string> }
     | undefined;
   const messageGroupId = sqs?.attributes?.MessageGroupId;

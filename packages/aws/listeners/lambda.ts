@@ -1,4 +1,4 @@
-import type { Event, Listener, ListenerResult } from "@hooksmith/core";
+import type { Context, Event, Listener, ListenerResult } from "@hooksmith/core";
 import {
   InvokeCommand,
   type InvokeCommandInput,
@@ -14,11 +14,25 @@ export interface LambdaClientLike {
   send(command: InvokeCommand): Promise<InvokeCommandOutput>;
 }
 
+/** Event-aware Lambda payload selector. */
+export type LambdaPayloadFactory<TEvent extends Event = Event> = (
+  event: TEvent,
+  context: Context,
+) => unknown | Promise<unknown>;
+
+/** Static Lambda payload values accepted without a selector callback. */
+export type StaticLambdaPayload =
+  | string
+  | number
+  | boolean
+  | null
+  | object;
+
 /** Options used to invoke a Lambda function asynchronously from a Hooksmith event. */
 export interface InvokeLambdaFunctionOptions<TEvent extends Event = Event> {
   functionName: ValueOrFactory<string, TEvent>;
   tenantId?: ValueOrFactory<string, TEvent>;
-  payload?: ValueOrFactory<unknown, TEvent>;
+  payload?: StaticLambdaPayload | LambdaPayloadFactory<TEvent>;
   input?: ValueOrFactory<
     Omit<
       InvokeCommandInput,
@@ -48,7 +62,9 @@ export function invokeLambdaFunction<TEvent extends Event = Event>(
         : await resolve(options.tenantId, event, context);
       const payload = options.payload === undefined
         ? event.data
-        : await resolve(options.payload, event, context);
+        : typeof options.payload === "function"
+        ? await options.payload(event, context)
+        : options.payload;
 
       const response = await client.send(
         new InvokeCommand({

@@ -208,6 +208,32 @@ Deno.test("invokeLambdaFunction resolves tenant id dynamically", async () => {
   assertEquals(result.success, true);
 });
 
+Deno.test("invokeLambdaFunction resolves payload from typed event", async () => {
+  let command: InvokeCommand | undefined;
+  const listener = invokeLambdaFunction<Event<{ orderId: string }>>({
+    functionName: "process-order",
+    payload: (current) => ({ id: current.data.orderId }),
+    client: {
+      send(value) {
+        command = value;
+        return Promise.resolve(
+          {
+            $metadata: {},
+            StatusCode: 202,
+          } satisfies InvokeCommandOutput,
+        );
+      },
+    },
+  });
+
+  await listener.run(event, context);
+
+  assertEquals(
+    new TextDecoder().decode(command?.input.Payload as Uint8Array),
+    '{"id":"42"}',
+  );
+});
+
 Deno.test("invokeLambdaFunction leaves tenant id unset by default", async () => {
   let command: InvokeCommand | undefined;
   const listener = invokeLambdaFunction({
