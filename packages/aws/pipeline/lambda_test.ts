@@ -116,6 +116,35 @@ Deno.test("lambda keeps tenant id optional", async () => {
   assertEquals(command?.input.TenantId, undefined);
 });
 
+Deno.test("lambda accepts interface-typed static payloads", async () => {
+  interface OrderPayload {
+    orderId: string;
+  }
+
+  let command: InvokeCommand | undefined;
+  const order: OrderPayload = { orderId: "42" };
+  const transformer = lambda<{ ignored: boolean }, { accepted: boolean }>({
+    functionName: "orders-processor",
+    payload: order,
+    client: {
+      send(value) {
+        command = value;
+        return response({
+          StatusCode: 200,
+          Payload: payload('{"accepted":true}'),
+        });
+      },
+    },
+  });
+
+  await transformer.transform({ ignored: true }, context);
+
+  assertEquals(
+    new TextDecoder().decode(command?.input.Payload as Uint8Array),
+    '{"orderId":"42"}',
+  );
+});
+
 Deno.test("lambda JSON-encodes string input", async () => {
   let command: InvokeCommand | undefined;
   const transformer = lambda<string, string>({
@@ -153,7 +182,7 @@ Deno.test("lambda wraps JSON serialization errors", async () => {
   const error = await assertRejects(
     () => Promise.resolve(transformer.transform(1n, context)),
     TypeError,
-    "Lambda transformer input must be JSON-serializable.",
+    "Lambda transformer payload must be JSON-serializable.",
   );
 
   assertEquals(error.cause instanceof TypeError, true);
