@@ -18,7 +18,6 @@ import {
 
 interface Order {
   orderId: string;
-  processor?: string;
 }
 
 interface TenantRoute {
@@ -62,12 +61,13 @@ export const handler = createHandler(readTenantRoute, processor, context);
 
 function readTenantRoute(record: LambdaRecord): EventDocument<TenantRoute> {
   const document = fromSqs<Order>(record);
+  const tenantId = resolveTenantId(document);
 
   return {
     ...document,
     data: {
-      tenantId: resolveTenantId(document),
-      functionName: resolveTarget(document),
+      tenantId,
+      functionName: resolveTarget(tenantId),
       payload: document.data,
     },
   };
@@ -90,6 +90,16 @@ function resolveTenantId(document: EventDocument<Order>): string {
   throw new Error("Unable to resolve tenant ID for SQS message.");
 }
 
-function resolveTarget(document: EventDocument<Order>): string {
-  return document.data.processor ?? "orders-processor";
+function resolveTarget(tenantId: string): string {
+  const targets: Record<string, string> = {
+    "tenant-a": "orders-processor-a",
+    "tenant-b": "orders-processor-b",
+  };
+
+  const functionName = targets[tenantId];
+  if (functionName === undefined) {
+    throw new Error(`No downstream Lambda configured for tenant ${tenantId}.`);
+  }
+
+  return functionName;
 }
