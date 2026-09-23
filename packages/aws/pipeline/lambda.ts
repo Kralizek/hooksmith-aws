@@ -42,7 +42,7 @@ export type StaticPipelinePayload =
   | Record<string, unknown>;
 
 /** Options used to synchronously invoke a Lambda function as a pipeline stage. */
-export interface LambdaTransformerOptions<TInput> {
+export interface LambdaTransformerOptions<TInput = unknown> {
   functionName: PipelineValueOrFactory<string, TInput>;
   tenantId?: PipelineValueOrFactory<string, TInput>;
   payload?: StaticPipelinePayload | PipelinePayloadFactory<TInput>;
