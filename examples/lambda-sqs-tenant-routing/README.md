@@ -9,10 +9,10 @@ listener to route each SQS record to a tenant-isolated downstream Lambda.
 > destination selection must come from sources your application treats as
 > trusted and must be validated according to your own authorization model.
 
-The Lambda listener receives the full adapted Hooksmith event, including promoted
-message attributes and `metadata.sqs.attributes.MessageGroupId`. It resolves
-`functionName`, `tenantId`, and `payload` dynamically from that event and
-invokes the downstream Lambda asynchronously with `InvocationType: "Event"`.
+The Lambda listener receives the full adapted Hooksmith event, including
+promoted message attributes and `metadata.sqs.attributes.MessageGroupId`. It
+resolves `functionName`, `tenantId`, and `payload` dynamically from that event
+and invokes the downstream Lambda asynchronously with `InvocationType: "Event"`.
 
 Tenant identity is application-defined. The example checks a promoted `tenantId`
 message attribute first and then `MessageGroupId`; applications can instead
